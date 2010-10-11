@@ -2,10 +2,12 @@
 
 require 'pp'
 
+unless RUBY_PLATFORM.include?('linux')
 begin
   require 'Win32/Console/ANSI' #if RUBY_PLATFORM =~ /win32/
 rescue LoadError
   raise 'You must gem install win32console to use color on Windows'
+end
 end
 
 class String
@@ -28,8 +30,12 @@ for i in 0..ARGV.length do
       i += 1
       $modifier = ARGV[i]
    end
+
    if el =~ /a[dd]/
+      i+=1
       $operation = 'add'
+      $modifier = ARGV[i,ARGV.length].join(' ')
+      break
    end
 end
 
@@ -70,14 +76,20 @@ def list
    tasks_overall = 0
 
    input.sort.each_with_index do |line,i| 
+      next if line.length <= 1
+
       if (($modifier != nil) && (Regexp.new($modifier, Regexp::IGNORECASE ).match(line)) ||
           ($modifier == nil))
          if /\(([A-Z])\)/.match(line) 
             col = ($dotfile[$dotfile["PRI_#{$1}"][1..-1]])
             #puts 'col: ' + col
 
-            col.sub!('\\\\033[', '')
-            col.sub!('m', '')
+            if col.nil?
+               col = ''
+            else
+               col.sub!('\\\\033[', '')
+               col.sub!('m', '')
+            end
 
             output.push(line.color(col))
             tasks_shown += 1
@@ -98,13 +110,12 @@ def list
 
 end
 
-def add
+def add (task)
    parse_dotfile()
-   input = get_todofile($dotfile["TODO_DIR"], $dotfile["TODO_FILE"])
-   input 
-open('myfile.out', 'a') { |f|
-  f.puts "Hello, world."
-}
+   
+   open(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]), 'a') { |f|
+      f.puts task
+   }
    
 end
 
@@ -115,7 +126,8 @@ when 'help'
    puts "rtodo list - lists all tasks"
    exit
 when 'add'
-   puts'add'
+   add $modifier
+   puts'added one task: ' + $modifier
 when 'list'
    list()
 end
