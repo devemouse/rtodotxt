@@ -102,6 +102,10 @@ def add
    parse_dotfile()
    input = get_todofile($dotfile["TODO_DIR"], $dotfile["TODO_FILE"])
    input 
+open('myfile.out', 'a') { |f|
+  f.puts "Hello, world."
+}
+   
 end
 
 
