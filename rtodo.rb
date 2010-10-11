@@ -28,27 +28,33 @@ for i in 0..ARGV.length do
       i += 1
       $modifier = ARGV[i]
    end
+   if el =~ /a[dd]/
+      $operation = 'add'
+   end
 end
 
 
-if $operation == 'help'
+case $operation
+when 'help'
    puts "rtodo list - lists all tasks"
    exit
+when 'add'
+   puts'add'
 end
+
+
+
 
 
 
 home = Dir.new(ENV['HOME'])
 
-lines = 0
 
-#size_match = "^[0-9a-fA-F]+\\+([0-9a-fA-F]+)  \\.([a-zA-Z_]+) +([0-9a-zA-Z_]+)\\."
-size_match = "^ *export *(.*)=[ '\"]*([^\s'\"]*)[\s'\"]*"
+#size_match = 
 
 
 File.new(File.join(ENV['HOME'].to_s, "todo.cfg")).each do |line| 
-   lines+=1 
-   if Regexp.new(size_match).match(line) then
+   if /^ *export *(.*)=[ '\"]*([^\s'\"]*)[\s'\"]*/.match(line) then
       #puts $1 + ' = ' + $2
       $dotfile[$1] = $2
    end
@@ -105,6 +111,5 @@ puts "TODO: #{tasks_shown} of #{tasks_overall} tasks shown"
 
 #pp todo_dir.inspect
 
-#puts lines
 
 
