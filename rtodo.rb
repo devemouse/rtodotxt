@@ -43,40 +43,34 @@ when 'add'
 end
 
 
-
-
-
-
-home = Dir.new(ENV['HOME'])
-
-
-#size_match = 
-
-
-File.new(File.join(ENV['HOME'].to_s, "todo.cfg")).each do |line| 
-   if /^ *export *(.*)=[ '\"]*([^\s'\"]*)[\s'\"]*/.match(line) then
-      #puts $1 + ' = ' + $2
-      $dotfile[$1] = $2
+def parse_dotfile
+   File.new(File.join(ENV['HOME'].to_s, "todo.cfg")).each do |line| 
+      if /^ *export *(.*)=[ '\"]*([^\s'\"]*)[\s'\"]*/.match(line) then
+         $dotfile[$1] = $2
+      end
    end
 end
 
-#pp $dotfile
 
+def get_todofile(dir, name)
+   todo_file = 
 
-todo_file = $dotfile["TODO_FILE"]
+   if todo_file.include?('/')
+      todo_file = todo_file.split('/')
+   else
+      todo_file = todo_file.split('\\')
+   end
 
-if todo_file.include?('/')
-   todo_file = todo_file.split('/')
-else
-   todo_file = todo_file.split('\\')
+   todo_file = todo_file.last
+
+   File.new(File.join(, todo_file))
 end
-
-todo_file = todo_file.last
 
 tasks_shown = 0
 tasks_overall = 0
 
-input = File.new(File.join($dotfile["TODO_DIR"], todo_file))
+input = get_todofile($dotfile["TODO_DIR"], $dotfile["TODO_FILE"])
+
 output = Array.new
 
 #input.map{|el| el.sub!(/^( +)(.*)/, ($1 == nil ? '' : (' ' * $1.length)) + ($2==nil ? '' : $2))}
