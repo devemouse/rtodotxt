@@ -21,6 +21,7 @@ $dotfile = Hash.new
 
 $operation = 'help'
 $modifier = nil
+$clear_contects = ''
 
 
 for i in 0..ARGV.length do
@@ -36,6 +37,10 @@ for i in 0..ARGV.length do
       $operation = 'add'
       $modifier = ARGV[i,ARGV.length].join(' ')
       break
+   end
+
+   if el =~ /-(@+)/
+      $clear_contects = /@\w/ if $1.length.odd?
    end
 end
 
@@ -80,6 +85,8 @@ def list
 
       if (($modifier != nil) && (Regexp.new($modifier, Regexp::IGNORECASE ).match(line)) ||
           ($modifier == nil))
+         line.sub!($clear_contects,'')
+
          if /\(([A-Z])\)/.match(line) 
             col = ($dotfile[$dotfile["PRI_#{$1}"][1..-1]])
             #puts 'col: ' + col
