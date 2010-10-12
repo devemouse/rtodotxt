@@ -102,8 +102,7 @@ def parse_argv
       end
       
       if el =~ /^--help$/ then
-      puts
-		  'Usage: $oneline_usage
+      puts 'Usage: $oneline_usage
 
 		  Actions:
 		    add|a "THING I NEED TO DO +project @context"
@@ -130,6 +129,7 @@ def parse_argv
 		    report
 
 		  See "help" for more details.'
+      exit
       end
 
    end
