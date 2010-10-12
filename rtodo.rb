@@ -62,6 +62,12 @@ def parse_argv
          $modifier = /.*\([A-Z]\).*/
       end
 
+      if el =~ /^(listall|lsa)$/ then
+         $operation = 'listall'
+         i += 1
+         $modifier = Regexp.new(ARGV[i].to_s, Regexp::IGNORECASE) 
+      end
+
       if el =~ /^(listcon|lsc)$/ then
          $operation = 'listcon'
          $modifier = /.*(@\w+).*/i
@@ -118,7 +124,6 @@ def get_todofile_name(dir, todo_file)
 end
 
 def list_prj
-   parse_dotfile()
    input = File.new(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]))
    output = Array.new
 
@@ -133,7 +138,6 @@ def list_prj
 end
 
 def _do
-   parse_dotfile()
    input = File.new(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"])).to_a
    output = Array.new
    done = Array.new
@@ -168,15 +172,13 @@ def _do
 
 end
 
-def list
-   parse_dotfile()
-   input = File.new(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"])).to_a
+def list(file, tasks_shown = 0, tasks_overall = 0, opts = {:colors => true})
+   offset = tasks_overall
+
+   input = File.new(file).to_a
    output = Array.new
 
    #input.map{|el| el.sub!(/^( +)(.*)/, ($1 == nil ? '' : (' ' * $1.length)) + ($2==nil ? '' : $2))}
-
-   tasks_shown = 0
-   tasks_overall = 0
 
    #go through case insensitive sorted list of lines
    input.sort{|x,y| x.casecmp(y)}.each_with_index do |line,i| 
@@ -192,7 +194,7 @@ def list
          #apply clearings and chomp newline at the end
          line_mod.chomp!
 
-         color_output = /\(([A-Z])\)/.match(line_mod) 
+         color_output = (/\(([A-Z])\)/.match(line_mod) && opts[:colors])
          pri = $1
 
          $hiders.each do |key, hider|
@@ -210,12 +212,12 @@ def list
                col.sub!('m', '')
             end
 
-            output.push("%02d %s".color(col) % [input.index(line)+1, line_mod])
+            output.push("%02d %s".color(col) % [input.index(line)+1+offset, line_mod])
             tasks_shown += 1
 
             col = ''
          else
-            output.push("%02d %s" % [input.index(line)+1, line])
+            output.push("%02d %s" % [input.index(line)+1+offset, line])
             tasks_shown += 1
          end
       end
@@ -228,7 +230,6 @@ def list
 end
 
 def add (task)
-   parse_dotfile()
    
    open(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]), 'a') { |f|
       f.puts task
@@ -238,32 +239,40 @@ end
 
 
 parse_argv()
+parse_dotfile()
+
 case $operation
 when 'help'
    puts "rtodo list - lists all tasks"
    exit
 when 'addm'
    $modifier.split("\n").each do |el|
-      add el
-      lines = File.readlines(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]))
-      puts lines.length.to_s + " " + el
-      puts 'TODO: ' + lines.length.to_s + ' added.'
+   add el
+   lines = File.readlines(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]))
+   puts lines.length.to_s + " " + el
+   puts 'TODO: ' + lines.length.to_s + ' added.'
    end
 when 'add'
    add $modifier.to_s
    puts'added one task: ' + $modifier.to_s
 when 'list'
-   a = list()
+   a = list(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]))
    puts '--'
    puts "TODO: #{a[0]} of #{a[1]} tasks shown"
 when  'listproj'
    list_prj()
 when 'listpri'
-   a = list()
+   a = list(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]))
    puts '--'
    puts "TODO: #{a[0]} of #{a[1]} tasks shown"
 when 'listcon'
    list_prj()
+when 'listall'
+   a = list(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]))
+   a = list(get_todofile_name($dotfile["TODO_DIR"], $dotfile["DONE_FILE"]), a[0], a[1], {:colors => false})
+
+   puts '--'
+   puts "TODO: #{a[0]} of #{a[1]} tasks shown"
 when 'do'
    _do
 end
