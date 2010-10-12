@@ -30,6 +30,35 @@ $hiders = {
 }
 
 
+$oneline_usage="#{File.basename(__FILE__)} [-fhpantvV] [-d todo_config] action [task_number] [task_description]"
+$short_help = "Usage: #{$oneline_usage}
+
+		  Actions: (X means not implemented yet)
+		    add|a \"THING I NEED TO DO +project @context\"
+		  X addto DEST \"TEXT TO ADD\"
+		    addm \"THINGS I NEED TO DO
+		          MORE THINGS I NEED TO DO\"
+		  X append|app ITEM# \"TEXT TO APPEND\"
+		  X archive
+		  X command [ACTIONS]
+		  X del|rm ITEM# [TERM]
+		  X dp|depri ITEM#[, ITEM#, ITEM#, ...]
+		    do ITEM#[, ITEM#, ITEM#, ...]
+		  X help
+		    list|ls [TERM...]
+		    listall|lsa [TERM...]
+		    listcon|lsc
+		  X listfile|lf SRC [TERM...]
+		    listpri|lsp [PRIORITY]
+		    listproj|lsprj
+		  X move|mv ITEM# DEST [SRC]
+		  X prepend|prep ITEM# \"TEXT TO PREPEND\"
+		  X pri|p ITEM# PRIORITY
+		  X replace ITEM# \"UPDATED TODO\"
+		    report
+
+		  See \"help\" for more details."
+
 def parse_argv
    for i in 0..ARGV.length do
       el = ARGV[i]
@@ -102,34 +131,6 @@ def parse_argv
       end
       
       if el =~ /^--help$/ then
-      puts 'Usage: $oneline_usage
-
-		  Actions:
-		    add|a "THING I NEED TO DO +project @context"
-		    addto DEST "TEXT TO ADD"
-		    addm "THINGS I NEED TO DO
-		          MORE THINGS I NEED TO DO"
-		    append|app ITEM# "TEXT TO APPEND"
-		    archive
-		    command [ACTIONS]
-		    del|rm ITEM# [TERM]
-		    dp|depri ITEM#[, ITEM#, ITEM#, ...]
-		    do ITEM#[, ITEM#, ITEM#, ...]
-		    help
-		    list|ls [TERM...]
-		    listall|lsa [TERM...]
-		    listcon|lsc
-		    listfile|lf SRC [TERM...]
-		    listpri|lsp [PRIORITY]
-		    listproj|lsprj
-		    move|mv ITEM# DEST [SRC]
-		    prepend|prep ITEM# "TEXT TO PREPEND"
-		    pri|p ITEM# PRIORITY
-		    replace ITEM# "UPDATED TODO"
-		    report
-
-		  See "help" for more details.'
-      exit
       end
 
    end
@@ -291,7 +292,7 @@ parse_dotfile()
 
 case $operation
 when 'help'
-   puts "rtodo list - lists all tasks"
+   puts $short_help
    exit
 when 'addm'
    $modifier.split("\n").each do |el|
