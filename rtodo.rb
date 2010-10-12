@@ -21,7 +21,9 @@ $dotfile = Hash.new
 
 $operation = 'help'
 $modifier = nil
-$clear_contects = ''
+$hide_contexts = ''
+$hide_projects = ''
+$hide_priorities = ''
 
 
 def parse_argv
@@ -42,7 +44,7 @@ def parse_argv
 
       if el =~ /^(listproj|lsprj)$/ then
          $operation = 'listproj'
-         $modifier = /.*(\+\w+).*/
+         $modifier = /.*(\+\w+).*/i
       end
 
       if el =~ /^(listpri|lsp)$/ then
@@ -50,9 +52,14 @@ def parse_argv
          $modifier = /.*\([A-Z]+\).*/
       end
 
+      if el =~ /^(listcon|lsc)$/ then
+         $operation = 'listcon'
+         $modifier = /.*(@\w+).*/i
+      end
+
       if el =~ /-(@+)/ then
          if $1.length.odd?
-            $clear_contects = /@\w/
+            $hide_contexts = /@\w/
          end
       end
 
@@ -94,12 +101,12 @@ def list_prj
          output.push($1)
       end
    end
-   output.each {|line| puts line}
+   output.uniq.each {|line| puts line}
 end
 
 def list
    parse_dotfile()
-   input = File.new(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]))
+   input = File.new(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"])).to_a
    output = Array.new
 
    #input.map{|el| el.sub!(/^( +)(.*)/, ($1 == nil ? '' : (' ' * $1.length)) + ($2==nil ? '' : $2))}
@@ -107,14 +114,21 @@ def list
    tasks_shown = 0
    tasks_overall = 0
 
-   input.sort.each_with_index do |line,i| 
+   #go through case insensitive sorted list of lines
+   input.sort{|x,y| x.casecmp(y)}.each_with_index do |line,i| 
+
+      #skip empty lines
       next if line.length <= 1
 
+      #apply filter
       if $modifier.match(line)
-         line.sub!($clear_contects,'')
+         #operate on copy not on original line
+         line_mod = line
 
-         line.chomp!
-         if /\(([A-Z])\)/.match(line) 
+         #apply clearings and chomp newline at the end
+         line_mod.sub!($hide_contexts,'').chomp!
+
+         if /\(([A-Z])\)/.match(line_mod) 
             col = ($dotfile[$dotfile["PRI_#{$1}"][1..-1]])
             #puts 'col: ' + col
 
@@ -125,12 +139,12 @@ def list
                col.sub!('m', '')
             end
 
-            output.push(line.color(col))
+            output.push("%02d %s".color(col) % [input.index(line)+1, line_mod])
             tasks_shown += 1
 
             col = ''
          else
-            output.push(line)
+            output.push("%02d %s" % [input.index(line)+1, line])
             tasks_shown += 1
          end
       end
@@ -172,5 +186,8 @@ when 'listpri'
    a = list()
    puts '--'
    puts "TODO: #{a[0]} of #{a[1]} tasks shown"
+when 'listcon'
+   list_prj()
+else
 end
 
