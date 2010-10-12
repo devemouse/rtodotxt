@@ -24,23 +24,38 @@ $modifier = nil
 $clear_contects = ''
 
 
-for i in 0..ARGV.length do
-   el = ARGV[i]
-   if el =~ /list/
-      $operation = 'list'
-      i += 1
-      $modifier = ARGV[i]
-   end
+def parse_argv
+   for i in 0..ARGV.length do
+      el = ARGV[i]
+      if el =~ /^list$/ then
+         $operation = 'list'
+         i += 1
+         $modifier = Regexp.new(ARGV[i].to_s, Regexp::IGNORECASE) 
+      end
 
-   if el =~ /a[dd]/
-      i+=1
-      $operation = 'add'
-      $modifier = ARGV[i,ARGV.length].join(' ')
-      break
-   end
+      if el =~ /^a[d]*$/ then
+         i+=1
+         $operation = 'add'
+         $modifier = ARGV[i,ARGV.length].join(' ')
+         break
+      end
 
-   if el =~ /-(@+)/
-      $clear_contects = /@\w/ if $1.length.odd?
+      if el =~ /^(listproj|lsprj)$/ then
+         $operation = 'listproj'
+         $modifier = /.*(\+\w+).*/
+      end
+
+      if el =~ /^(listpri|lsp)$/ then
+         $operation = 'listpri'
+         $modifier = /.*\([A-Z]+\).*/
+      end
+
+      if el =~ /-(@+)/ then
+         if $1.length.odd?
+            $clear_contects = /@\w/
+         end
+      end
+
    end
 end
 
@@ -67,15 +82,27 @@ def get_todofile_name(dir, todo_file)
    File.join(dir, todo_file)
 end
 
-def list
-   def push_line(line)
+def list_prj
+   parse_dotfile()
+   input = File.new(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]))
+   output = Array.new
+
+   input.sort.each_with_index do |line,i| 
+      next if line.length <= 1
+
+      if $modifier.match(line)
+         output.push($1)
+      end
    end
+   output.each {|line| puts line}
+end
+
+def list
    parse_dotfile()
    input = File.new(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]))
    output = Array.new
 
    #input.map{|el| el.sub!(/^( +)(.*)/, ($1 == nil ? '' : (' ' * $1.length)) + ($2==nil ? '' : $2))}
-
 
    tasks_shown = 0
    tasks_overall = 0
@@ -83,10 +110,10 @@ def list
    input.sort.each_with_index do |line,i| 
       next if line.length <= 1
 
-      if (($modifier != nil) && (Regexp.new($modifier, Regexp::IGNORECASE ).match(line)) ||
-          ($modifier == nil))
+      if $modifier.match(line)
          line.sub!($clear_contects,'')
 
+         line.chomp!
          if /\(([A-Z])\)/.match(line) 
             col = ($dotfile[$dotfile["PRI_#{$1}"][1..-1]])
             #puts 'col: ' + col
@@ -110,10 +137,9 @@ def list
       tasks_overall += 1
    end
 
-   output.each {|line| print line}
+   output.each {|line| puts line}
 
-   puts '--'
-   puts "TODO: #{tasks_shown} of #{tasks_overall} tasks shown"
+   [tasks_shown, tasks_overall]
 
 end
 
@@ -128,14 +154,23 @@ end
 
 
 
+parse_argv()
 case $operation
 when 'help'
    puts "rtodo list - lists all tasks"
    exit
 when 'add'
-   add $modifier
-   puts'added one task: ' + $modifier
+   add $modifier.to_s
+   puts'added one task: ' + $modifier.to_s
 when 'list'
-   list()
+   a = list()
+   puts '--'
+   puts "TODO: #{a[0]} of #{a[1]} tasks shown"
+when  'listproj'
+   list_prj()
+when 'listpri'
+   a = list()
+   puts '--'
+   puts "TODO: #{a[0]} of #{a[1]} tasks shown"
 end
 
