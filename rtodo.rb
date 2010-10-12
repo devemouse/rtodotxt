@@ -75,7 +75,7 @@ def parse_argv
 
       if el =~ /-(P+)/ then
          if $1.length.odd?
-            $hiders[:hide_priorities] = /\([A-Z]\)/
+            $hiders[:hide_priorities] = /\([A-Z]\) */
          end
       end
 
@@ -143,12 +143,16 @@ def list
 
          #apply clearings and chomp newline at the end
          line_mod.chomp!
+
+         color_output = /\(([A-Z])\)/.match(line_mod) 
+         pri = $1
+
          $hiders.each do |key, hider|
             line.sub!(hider,'')
          end
 
-         if /\(([A-Z])\)/.match(line_mod) 
-            col = ($dotfile[$dotfile["PRI_#{$1}"][1..-1]])
+         if color_output
+            col = ($dotfile[$dotfile["PRI_#{pri}"][1..-1]])
             #puts 'col: ' + col
 
             if col.nil?
