@@ -62,6 +62,10 @@ def parse_argv
          $modifier = /.*\([A-Z]\).*/
       end
 
+      if el =~ /^report$/ then
+         $operation = 'report'
+      end
+
       if el =~ /^(listall|lsa)$/ then
          $operation = 'listall'
          i += 1
@@ -236,6 +240,19 @@ def add (task)
    }
 end
 
+def report
+   todo = File.readlines(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"])).length
+   done = File.readlines(get_todofile_name($dotfile["TODO_DIR"], $dotfile["DONE_FILE"])).length
+
+   open(get_todofile_name($dotfile["TODO_DIR"], $dotfile["REPORT_FILE"]), 'a') { |f|
+      f.puts(Time.now.strftime("%Y-%m-%d-%H:%M:%S") + ' ' + todo.to_s + ' ' + done.to_s)
+   }
+
+   report = File.readlines(get_todofile_name($dotfile["TODO_DIR"], $dotfile["REPORT_FILE"]))
+
+   puts "TODO: Report file updated."
+   report.each {|el| puts el}
+end
 
 
 parse_argv()
@@ -275,5 +292,7 @@ when 'listall'
    puts "TODO: #{a[0]} of #{a[1]} tasks shown"
 when 'do'
    _do
+when 'report'
+   report
 end
 
