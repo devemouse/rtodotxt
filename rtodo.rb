@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+#
+#TODO: line numbers are generated wrong way.
 
 require 'pp'
 
@@ -21,9 +23,11 @@ $dotfile = Hash.new
 
 $operation = 'help'
 $modifier = nil
-$hide_contexts = ''
-$hide_projects = ''
-$hide_priorities = ''
+$hiders = {
+   :hide_contexts => //,
+   :hide_projects => //,
+   :hide_priorities => //
+}
 
 
 def parse_argv
@@ -49,7 +53,7 @@ def parse_argv
 
       if el =~ /^(listpri|lsp)$/ then
          $operation = 'listpri'
-         $modifier = /.*\([A-Z]+\).*/
+         $modifier = /.*\([A-Z]\).*/
       end
 
       if el =~ /^(listcon|lsc)$/ then
@@ -59,7 +63,19 @@ def parse_argv
 
       if el =~ /-(@+)/ then
          if $1.length.odd?
-            $hide_contexts = /@\w/
+            $hiders[:hide_contexts] = /@\w+/
+         end
+      end
+
+      if el =~ /-(\++)/ then
+         if $1.length.odd?
+            $hiders[:hide_projects] = /\+\w+/
+         end
+      end
+
+      if el =~ /-(P+)/ then
+         if $1.length.odd?
+            $hiders[:hide_priorities] = /\([A-Z]\)/
          end
       end
 
@@ -126,7 +142,10 @@ def list
          line_mod = line
 
          #apply clearings and chomp newline at the end
-         line_mod.sub!($hide_contexts,'').chomp!
+         line_mod.chomp!
+         $hiders.each do |key, hider|
+            line.sub!(hider,'')
+         end
 
          if /\(([A-Z])\)/.match(line_mod) 
             col = ($dotfile[$dotfile["PRI_#{$1}"][1..-1]])
