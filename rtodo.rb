@@ -100,6 +100,37 @@ def parse_argv
             $hiders[:hide_priorities] = /\([A-Z]\) */
          end
       end
+      
+      if el =~ /^--help$/ then
+      puts
+		  'Usage: $oneline_usage
+
+		  Actions:
+		    add|a "THING I NEED TO DO +project @context"
+		    addto DEST "TEXT TO ADD"
+		    addm "THINGS I NEED TO DO
+		          MORE THINGS I NEED TO DO"
+		    append|app ITEM# "TEXT TO APPEND"
+		    archive
+		    command [ACTIONS]
+		    del|rm ITEM# [TERM]
+		    dp|depri ITEM#[, ITEM#, ITEM#, ...]
+		    do ITEM#[, ITEM#, ITEM#, ...]
+		    help
+		    list|ls [TERM...]
+		    listall|lsa [TERM...]
+		    listcon|lsc
+		    listfile|lf SRC [TERM...]
+		    listpri|lsp [PRIORITY]
+		    listproj|lsprj
+		    move|mv ITEM# DEST [SRC]
+		    prepend|prep ITEM# "TEXT TO PREPEND"
+		    pri|p ITEM# PRIORITY
+		    replace ITEM# "UPDATED TODO"
+		    report
+
+		  See "help" for more details.'
+      end
 
    end
 end
