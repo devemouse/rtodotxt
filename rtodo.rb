@@ -45,6 +45,12 @@ def parse_argv
          $modifier = ARGV[i,ARGV.length].join(' ')
          break
       end
+      if el =~ /^addm$/ then
+         i+=1
+         $operation = 'addm'
+         $modifier = ARGV[i,ARGV.length].join(' ')
+         break
+      end
 
       if el =~ /^(listproj|lsprj)$/ then
          $operation = 'listproj'
@@ -186,7 +192,6 @@ def add (task)
    open(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]), 'a') { |f|
       f.puts task
    }
-   
 end
 
 
@@ -196,6 +201,13 @@ case $operation
 when 'help'
    puts "rtodo list - lists all tasks"
    exit
+when 'addm'
+   $modifier.split("\n").each do |el|
+      add el
+      lines = File.readlines(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]))
+      puts lines.length.to_s + " " + el
+      puts 'TODO: ' + lines.length.to_s + ' added.'
+   end
 when 'add'
    add $modifier.to_s
    puts'added one task: ' + $modifier.to_s
