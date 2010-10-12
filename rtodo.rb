@@ -33,7 +33,7 @@ $hiders = {
 def parse_argv
    for i in 0..ARGV.length do
       el = ARGV[i]
-      if el =~ /^list$/ then
+      if el =~ /^(list|ls)$/ then
          $operation = 'list'
          i += 1
          $modifier = Regexp.new(ARGV[i].to_s, Regexp::IGNORECASE) 
@@ -65,6 +65,12 @@ def parse_argv
       if el =~ /^(listcon|lsc)$/ then
          $operation = 'listcon'
          $modifier = /.*(@\w+).*/i
+      end
+
+      if el =~ /^do$/ then
+         $operation = 'do'
+         i+=1
+         $modifier = ARGV[i,ARGV.length]
       end
 
       if el =~ /-(@+)/ then
@@ -126,6 +132,42 @@ def list_prj
    output.uniq.each {|line| puts line}
 end
 
+def _do
+   parse_dotfile()
+   input = File.new(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"])).to_a
+   output = Array.new
+   done = Array.new
+
+   input.each_with_index do |el, i|
+      if $modifier.include?((i+1).to_s)
+         #puts (i+1).to_s + "  " + el.to_s
+         done.push("x " + Time.now.strftime("%Y-%m-%d") + ' ' +  el)
+      else
+         output.push(el)
+      end
+   end
+   
+   print "output: "
+   pp output
+
+   print "  done: "
+   pp done
+
+   File.open(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]), 'w') { |f|
+      output.each do |el|
+      f.puts el
+      end
+   }
+
+   File.open(get_todofile_name($dotfile["TODO_DIR"], $dotfile["DONE_FILE"]), 'a') { |f|
+      done.each do |el|
+      f.puts el
+      end
+   }
+
+
+end
+
 def list
    parse_dotfile()
    input = File.new(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"])).to_a
@@ -183,7 +225,6 @@ def list
    output.each {|line| puts line}
 
    [tasks_shown, tasks_overall]
-
 end
 
 def add (task)
@@ -223,6 +264,7 @@ when 'listpri'
    puts "TODO: #{a[0]} of #{a[1]} tasks shown"
 when 'listcon'
    list_prj()
-else
+when 'do'
+   _do
 end
 
