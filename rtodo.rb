@@ -222,11 +222,6 @@ end
 def _del
    todo = File.readlines(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]))
 
-   if $modifier[0].nil?
-      puts "usage: #{File.basename(__FILE__)} del ITEM# [TERM]"
-      return
-   end
-
    $modifier[0] = $modifier[0].to_i
 
    if $modifier[0] == 0
