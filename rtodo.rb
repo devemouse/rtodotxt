@@ -21,11 +21,9 @@ class String
    end
 end
 
-
 $dotfile = Hash.new
 
 $operation = ''
-$cfg_file = nil
 $modifier = nil
 $hiders = {
    :hide_contexts => //,
@@ -326,36 +324,22 @@ def parse_argv
       $operation = 'shorthelp'
    end
 
+   cfg_file = nil
+
    cfgfilesToCheck.each do |el|
       if File.exists?(el.to_s)
-         $cfg_file = el.to_s
+         cfg_file = el.to_s
+         File.new(cfg_file).each do |line| 
+            if /^ *export *(.*)=[ '\"]*([^\s'\"]*)[\s'\"]*/.match(line) then
+               $dotfile[$1] = $2
+            end
+         end
       end
    end
 
-   if $cfg_file.nil?
+   if cfg_file.nil?
       puts "Fatal Error: Cannot read configuration file #{cfgfilesToCheck.find{|el| !el.nil?}}"
          exit
-   end
-
-   #if $cfg_file.nil? || !File.exists?($cfg_file)
-      #checkDefaultDotfile()
-   #end
-end
-
-def checkDefaultDotfile
-   if File.exists?(File.join(ENV['HOME'].to_s, "todo.cfg"))
-      $cfg_file = File.join(ENV['HOME'].to_s, "todo.cfg")
-   else
-      puts "Fatal Error: Cannot read configuration file #{$cfg_file}"
-      exit
-   end
-end
-
-def parse_dotfile
-   File.new(File.join(ENV['HOME'].to_s, "todo.cfg")).each do |line| 
-      if /^ *export *(.*)=[ '\"]*([^\s'\"]*)[\s'\"]*/.match(line) then
-         $dotfile[$1] = $2
-      end
    end
 end
 
@@ -469,8 +453,6 @@ def list(file, tasks_shown = 0, tasks_overall = 0, opts = {:colors => true})
    input = File.new(file).to_a
    output = Array.new
 
-   #input.map{|el| el.sub!(/^( +)(.*)/, ($1 == nil ? '' : (' ' * $1.length)) + ($2==nil ? '' : $2))}
-
    #go through case insensitive sorted list of lines
    input.sort{|x,y| x.casecmp(y)}.each_with_index do |line,i| 
 
@@ -494,7 +476,6 @@ def list(file, tasks_shown = 0, tasks_overall = 0, opts = {:colors => true})
 
          if color_output
             col = ($dotfile[$dotfile["PRI_#{pri}"][1..-1]])
-            #puts 'col: ' + col
 
             if col.nil?
                col = ''
@@ -541,9 +522,8 @@ def report
    report.each {|el| puts el}
 end
 
-
+#############################################################################################
 parse_argv()
-parse_dotfile()
 
 case $operation
 when 'help'
