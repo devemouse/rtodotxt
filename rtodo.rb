@@ -21,7 +21,7 @@ class String
    end
 end
 
-$dotfile = Hash.new
+$dotfile = 
 
 $operation = ''
 $modifier = nil
@@ -324,29 +324,30 @@ def parse_argv
       $operation = 'shorthelp'
    end
 
-   cfg_file = nil
-
    cfgfilesToCheck.each do |el|
-      if File.exists?(el.to_s)
-         cfg_file = el.to_s
-         File.new(cfg_file).each do |line| 
-            if /^ *export *(.*)=[ '\"]*([^\s'\"]*)[\s'\"]*/.match(line) then
-               $dotfile[$1] = $2
-            end
-         end
-      end
+      $dotfile = parse_dotfile(el.to_s)
    end
 
-   if cfg_file.nil?
+   if $dotfile.nil?
       puts "Fatal Error: Cannot read configuration file #{cfgfilesToCheck.find{|el| !el.nil?}}"
          exit
    end
 end
 
+def parse_dotfile(file_name)
+   retval = Hash.new
+   if File.exists?(file_name)
+      File.new(file_name).each do |line| 
+         if /^ *export *(.*)=[ '\"]*([^\s'\"]*)[\s'\"]*/.match(line) then
+            retval[$1] = $2
+         end
+      end 
+   end
+   retval
+end
+
 
 def get_todofile_name(dir, todo_file)
-   #todo_file = name
-
    if todo_file.include?('/')
       todo_file = todo_file.split('/')
    else
