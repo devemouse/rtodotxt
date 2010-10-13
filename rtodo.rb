@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 #
 #TODO: line numbers are generated wrong way.
+#
+#BUG: deleting a task does not remove the line but only clears it
+#
 
 require 'pp'
 
@@ -41,7 +44,7 @@ $short_help = "Usage: #{$oneline_usage}
 		  X append|app ITEM# \"TEXT TO APPEND\"
 		  X archive
 		  X command [ACTIONS]
-		  X del|rm ITEM# [TERM]
+		    del|rm ITEM# [TERM]
 		  X dp|depri ITEM#[, ITEM#, ITEM#, ...]
 		    do ITEM#[, ITEM#, ITEM#, ...]
 		  X help
@@ -74,10 +77,20 @@ def parse_argv
          $modifier = ARGV[i,ARGV.length].join(' ')
          break
       end
+
       if el =~ /^addm$/ then
          i+=1
          $operation = 'addm'
          $modifier = ARGV[i,ARGV.length].join(' ')
+         break
+      end
+
+      if el =~ /^(del|rm)$/ then
+         $operation = 'del'
+         i+=1
+         $modifier = Array.new(2)
+         $modifier[0] = ARGV[i]
+         $modifier[1] = ARGV[i+1,ARGV.length]
          break
       end
 
@@ -204,8 +217,54 @@ def _do
       f.puts el
       end
    }
+end
 
+def _del
+   todo = File.readlines(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]))
 
+   if $modifier[0].nil?
+      puts "usage: #{File.basename(__FILE__)} del ITEM# [TERM]"
+      return
+   end
+
+   $modifier[0] = $modifier[0].to_i
+
+   if $modifier[0] == 0
+      puts "usage: #{File.basename(__FILE__)} del ITEM# [TERM]"
+      return
+   end
+
+   if $modifier[1].nil? || $modifier[1].empty?
+      puts "Delete '#{todo[$modifier[0]-1].chomp}'?  (y/n)"
+      answer = STDIN.gets.chomp
+
+      case answer
+      when 'y'
+         puts "%d %s" % [$modifier[0], todo[$modifier[0]-1]]
+         todo[$modifier[0]-1] = ''
+         puts "TODO: %s deleted." % $modifier[0]
+      else
+         puts "TODO: No tasks were deleted."
+      end
+   else
+
+      puts "%d %s" % [$modifier[0], todo[$modifier[0]-1]]
+
+      $modifier[1] = $modifier[1].join(' ')
+      if Regexp.new(".*" + $modifier[1] + ".*").match(todo[$modifier[0]-1])
+         puts "TODO: Removed '#{$modifier[1]}' from task."
+         todo[$modifier[0]-1].sub!($modifier[1], '')
+         puts "%d %s" % [$modifier[0], todo[$modifier[0]-1]]
+      else
+         puts "TODO: '#{$modifier[1]}' not found; no removal done."
+      end
+   end
+
+   File.open(get_todofile_name($dotfile["TODO_DIR"], $dotfile["TODO_FILE"]), 'w') { |f|
+      todo.each do |el|
+      f.puts el
+      end
+   }
 end
 
 def list(file, tasks_shown = 0, tasks_overall = 0, opts = {:colors => true})
@@ -324,6 +383,8 @@ when 'listall'
    puts "TODO: #{a[0]} of #{a[1]} tasks shown"
 when 'do'
    _do
+when 'del'
+   _del
 when 'report'
    report
 end
