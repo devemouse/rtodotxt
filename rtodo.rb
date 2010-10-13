@@ -24,7 +24,8 @@ end
 
 $dotfile = Hash.new
 
-$operation = 'shorthelp'
+$operation = ''
+$cfg_file = nil
 $modifier = nil
 $hiders = {
    :hide_contexts => //,
@@ -173,7 +174,7 @@ $long_help = "  Usage: #{$oneline_usage}
     -+
         Hide project names in list output. Use twice to show project
         names (default).
-  X -d CONFIG_FILE
+    -d CONFIG_FILE
         Use a configuration file other than the default ~/.todo/config
   X -f
         Forces actions without confirmation or interactive input
@@ -203,18 +204,25 @@ $long_help = "  Usage: #{$oneline_usage}
 
 
   Environment variables:
-    TODOTXT_AUTO_ARCHIVE=0          is same as option -a
+  X TODOTXT_AUTO_ARCHIVE=0          is same as option -a
     TODOTXT_CFG_FILE=CONFIG_FILE    is same as option -d CONFIG_FILE
-    TODOTXT_FORCE=1                 is same as option -f
-    TODOTXT_PRESERVE_LINE_NUMBERS=0 is same as option -n
-    TODOTXT_PLAIN=1                 is same as option -p
-    TODOTXT_DATE_ON_ADD=1           is same as option -t
-    TODOTXT_VERBOSE=1               is same as option -v
-    TODOTXT_DEFAULT_ACTION=\"\"       run this when called with no arguments
-    TODOTXT_SORT_COMMAND=\"sort ...\" customize list output
-    TODOTXT_FINAL_FILTER=\"sed ...\"  customize list after color, P@+ hiding"
+  X TODOTXT_FORCE=1                 is same as option -f
+  X TODOTXT_PRESERVE_LINE_NUMBERS=0 is same as option -n
+  X TODOTXT_PLAIN=1                 is same as option -p
+  X TODOTXT_DATE_ON_ADD=1           is same as option -t
+  X TODOTXT_VERBOSE=1               is same as option -v
+  X TODOTXT_DEFAULT_ACTION=\"\"       run this when called with no arguments
+  X TODOTXT_SORT_COMMAND=\"sort ...\" customize list output
+  X TODOTXT_FINAL_FILTER=\"sed ...\"  customize list after color, P@+ hiding"
 
 def parse_argv
+
+   cfgfilesToCheck = [
+      ENV['TODOTXT_CFG_FILE'],
+      File.join(ENV['HOME'].to_s, ".todo" , "config"),
+      File.join(ENV['HOME'].to_s, "todo.cfg")
+   ]
+
    for i in 0..ARGV.length do
       el = ARGV[i]
       if el =~ /^(list|ls)$/ then
@@ -286,9 +294,15 @@ def parse_argv
       end
 
       if el =~ /-(@+)/ then
-         if $1.length.odd?
+         if $1.length.odd? then
             $hiders[:hide_contexts] = /@\w+/
          end
+      end
+
+      if el =~ /-d/ then
+         puts 'config file changing'
+         i+=1
+         cfgfilesToCheck.unshift(ARGV[i])
       end
 
       if el =~ /-(\++)/ then
@@ -306,6 +320,34 @@ def parse_argv
       if el =~ /^--help$/ then
       end
 
+   end
+
+   if $operation == ''
+      $operation = 'shorthelp'
+   end
+
+   cfgfilesToCheck.each do |el|
+      if File.exists?(el.to_s)
+         $cfg_file = el.to_s
+      end
+   end
+
+   if $cfg_file.nil?
+      puts "Fatal Error: Cannot read configuration file #{cfgfilesToCheck.find{|el| !el.nil?}}"
+         exit
+   end
+
+   #if $cfg_file.nil? || !File.exists?($cfg_file)
+      #checkDefaultDotfile()
+   #end
+end
+
+def checkDefaultDotfile
+   if File.exists?(File.join(ENV['HOME'].to_s, "todo.cfg"))
+      $cfg_file = File.join(ENV['HOME'].to_s, "todo.cfg")
+   else
+      puts "Fatal Error: Cannot read configuration file #{$cfg_file}"
+      exit
    end
 end
 
