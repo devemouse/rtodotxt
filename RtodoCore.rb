@@ -1,4 +1,6 @@
 
+require 'RTask'
+
 class String
    def color(color)
       return "\e[" + color + "m" + self + "\e[0m"

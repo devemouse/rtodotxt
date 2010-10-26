@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 require 'test/unit'
-require '../RtodoCore'
+require 'RtodoCore'
 require 'fileutils'
 
 
