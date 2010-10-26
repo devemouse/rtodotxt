@@ -6,10 +6,34 @@ class String
 end
 
 class Rtodo
-   attr_reader :short_help, :help, :long_help, :oneline_help
+   attr_reader :short_help, :help, :long_help, :oneline_help, :all_tasks
 
    def method_missing(method, *arg)
       false
+   end
+
+   def ls(filter = '')
+      Array.new
+   end
+
+   def lsp(priority = '')
+      Array.new
+   end
+
+   def lsa(filter = '')
+      Array.new
+   end
+
+   def lsc()
+      Array.new
+   end
+
+   def lsprj()
+      Array.new
+   end
+
+   def lf(file = "", filter = "")
+      Array.new
    end
 
    def set(opt = '')
@@ -24,10 +48,44 @@ class Rtodo
    def output
    end
 
+   def parse_dotfile(file_name)
+      retval = nil
+      if File.exists?(file_name)
+         retval = Hash.new
+         File.new(file_name).each do |line| 
+            if /^ *export *(.*)=[ '\"]*([^\s'\"]*)[\s'\"]*/.match(line) then
+               retval[$1] = $2
+            end
+         end 
+      end
+      retval
+   end
+
    def initialize (params = {:dotfile => '',
                    :operation => '',
                    :parameter => ''})
       @opts = params
+
+      cfgfilesToCheck = [
+         params[:dotfile],
+         ENV['TODOTXT_CFG_FILE'],
+         File.join(ENV['HOME'].to_s, ".todo" , "config"),
+         File.join(ENV['HOME'].to_s, "todo.cfg")
+      ]
+
+      @opts[:dotfile] = nil
+
+      cfgfilesToCheck.each do |el|
+         if File.exists?(el.to_s)
+            @opts[:dotfile] = 1
+         end
+      end
+
+      if @opts[:dotfile].nil?
+         raise IOError
+      end
+
+      @all_tasks = Array.new
 
 
 
@@ -215,4 +273,11 @@ class Rtodo
         #{self.set('TODOTXT_SORT_COMMAND')          ? ' ' : 'X'} TODOTXT_SORT_COMMAND=\"sort ...\" customize list output
         #{self.set('TODOTXT_FINAL_FILTER')          ? ' ' : 'X'} TODOTXT_FINAL_FILTER=\"sed ...\"  customize list after color, P@+ hiding"
    end
+
+   alias_method :list, :ls
+   alias_method :listpri, :lsp
+   alias_method :listall, :lsa
+   alias_method :listcon, :lsc
+   alias_method :listproj, :lsprj
+   alias_method :listfile, :lf
 end

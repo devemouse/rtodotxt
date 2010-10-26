@@ -1,42 +1,52 @@
 #!/usr/bin/env ruby
 require 'test/unit'
 require '../RtodoCore'
+require 'fileutils'
+
 
 class Test0000_Config < Test::Unit::TestCase
 
    def setup
       # backup ENV
-      #@env_bkp = ENV['TODOTXT_CFG_FILE']
-      #ENV['TODOTXT_CFG_FILE'] = '' unless (@env_bkp.nil? or @env_bkp == '')
-      #
+      @env_bkp = ENV['TODOTXT_CFG_FILE']
+      ENV['TODOTXT_CFG_FILE'] = '' unless (@env_bkp.nil? or @env_bkp == '')
+
       self.hideFile(ENV['TODOTXT_CFG_FILE'].to_s)
       self.hideFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
       self.hideFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
+
+      @fname = "temp.cfg"
+      unless File.exists?(@fname)
+         open(@fname, 'a') { |f|
+            f.puts "dummy"
+         }
+      end
+
+      @verbose = false
    end
 
    def hideFile(filename)
       if File.exists?(filename)
-         File.rename(filename, filename + ".bak")
+         FileUtils.mv(filename, filename + ".bak", :verbose => @verbose)
       end
    end
 
    def restoreFile(filename)
       if File.exists?(filename + ".bak")
-         File.rename(filename + ".bak", filename)
+         FileUtils.mv(filename + ".bak", filename, :verbose => @verbose)
       end
    end
 
    def test_noConfig
+      # Initialize with no config.
+      assert_raise(IOError) { Rtodo.new() }
 
-
-      flunk("not implemented")
       # delete config files from all locations
       # run script
       # expect failure in constructor (exeption)
    end
 
    def test_sequenceConfig_Param
-      flunk("not implemented")
       # delete config files from all locations
       # setup config files under locations:
       #    parameter
@@ -44,42 +54,59 @@ class Test0000_Config < Test::Unit::TestCase
       #    ~/.todo/config
       #    todo.cfg
       # expect 1st one used
+      #
+
+      assert_nothing_raised(IOError) { Rtodo.new({:dotfile => @fname}) }
    end
 
    def test_sequenceConfig_ENV
-      flunk("not implemented")
       # delete config files from all locations
       # setup config files under locations:
       #    ENV
       #    ~/.todo/config
       #    todo.cfg
       # expect 1st one used
+      ENV['TODOTXT_CFG_FILE'] = File.expand_path(@fname)
+
+      assert_nothing_raised(IOError) { Rtodo.new() }
    end
 
    def test_sequenceConfig_Config
-      flunk("not implemented")
       # delete config files from all locations
       # setup config files under locations:
       #    ~/.todo/config
       #    todo.cfg
       # expect 1st one used
+
+      FileUtils.cp(File.expand_path(@fname), File.join(ENV['HOME'].to_s, ".todo" , "config"), :verbose => @verbose)
+
+      assert_nothing_raised(IOError) { Rtodo.new() }
+
+      FileUtils.rm(File.join(ENV['HOME'].to_s, ".todo" , "config"), :verbose => @verbose)
    end
 
    def test_sequenceConfig_TodoCfg
-      flunk("not implemented")
       # delete config files from all locations
       # setup config files under locations:
       #    ~/.todo/config
       #    todo.cfg
       # expect 1st one used
+      FileUtils.cp(File.expand_path(@fname), File.join(ENV['HOME'].to_s, "todo.cfg"), :verbose => @verbose)
+
+      assert_nothing_raised(IOError) { Rtodo.new() }
+
+      FileUtils.rm(File.join(ENV['HOME'].to_s, "todo.cfg"), :verbose => @verbose)
    end
 
    def teardown
       # restore ENV
-      #ENV['TODOTXT_CFG_FILE'] = @env_bkp unless (@env_bkp.nil? or @env_bkp == '')
+      ENV['TODOTXT_CFG_FILE'] = @env_bkp unless (@env_bkp.nil? or @env_bkp == '')
+
       restoreFile(ENV['TODOTXT_CFG_FILE'].to_s)
       restoreFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
       restoreFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
+
+      FileUtils.rm(File.expand_path(@fname), :verbose => @verbose)
    end
 
 end

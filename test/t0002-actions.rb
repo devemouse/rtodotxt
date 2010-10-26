@@ -8,7 +8,7 @@ class Test0002_actions < Test::Unit::TestCase
    end
 
    def test_NOT_IMPLEMENTED
-      flunk("OOPS")
+      flunk("actions not implemented at all")
    end
 
    def teardown

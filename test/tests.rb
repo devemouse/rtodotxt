@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 require 'test/unit'
 require 't0000-config'
-#require 't0001-null'
-#require 't0002-actions'
+require 't0001-null'
+require 't0002-actions'
 #require 't1000-addlist'
 #require 't1010-add-date'
 #require 't1020-addtolistfile'

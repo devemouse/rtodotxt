@@ -5,116 +5,213 @@ require '../RtodoCore'
 class Test0001_null < Test::Unit::TestCase
 
    def setup
+      @tmpdir = "temp"
+      Dir.mkdir(@tmpdir)
+
+      @dotFname = File.expand_path("temp.cfg")
+
+      open(@dotFname, 'w') { |f|
+            f.puts "export TODO_DIR=\"#{@tmpdir}\"
+export TODO_FILE=\"$TODO_DIR/todo.txt\"
+"
+      }
+
+       @rtodo = Rtodo.new({:dotfile => @dotFname})
    end
 
-   def test_NOT_IMPLEMENTED
-      flunk("OOPS")
+   ###############     ls      #################
+   def test_nil_ls
+      tasks = @rtodo.ls
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
    end
+
+   def test_nil_list
+      tasks = @rtodo.list
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   def test_nil_ls_filter
+      tasks = @rtodo.ls('filter')
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   def test_nil_list_filter
+      tasks = @rtodo.list('filter')
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+
+   ###############     lsp     #################
+   def test_nil_lsp
+      tasks = @rtodo.lsp
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   def test_nil_listpri
+      tasks = @rtodo.listpri
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   def test_nil_lsp_filter
+      tasks = @rtodo.lsp('A')
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   def test_nil_listpri_filter
+      tasks = @rtodo.listpri('A')
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   ###############     lsa     #################
+   def test_nil_lsa
+      tasks = @rtodo.lsa
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   def test_nil_listall
+      tasks = @rtodo.listall
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   def test_nil_lsa_filter
+      tasks = @rtodo.lsa('filter')
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   def test_nil_listall_filter
+      tasks = @rtodo.listall('filter')
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   ###############     lsc     #################
+   def test_nil_lsc
+      tasks = @rtodo.lsc
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   def test_nil_listcon
+      tasks = @rtodo.listcon
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   ###############     lsprj   #################
+   def test_nil_lsprj
+      tasks = @rtodo.lsprj
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   def test_nil_listproj
+      tasks = @rtodo.listproj
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   ###############     lf      #################
+   def test_nil_lf
+      tasks = @rtodo.lf
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   def test_nil_listfile
+      tasks = @rtodo.listfile
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   def test_nil_listfile_filter
+      #use some random file as a parameter
+      tasks = @rtodo.listfile("filter")
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
+   def test_nil_listfile_file
+      #use some random file as a parameter
+      tasks = @rtodo.listfile("",  "FDSIUVSDRU.txt")
+
+      assert_kind_of( Array, tasks)
+      assert( tasks.empty? )
+
+      assert( @rtodo.all_tasks.empty? )
+   end
+
 
    def teardown
+      FileUtils.remove_entry_secure @tmpdir
+      FileUtils.remove_entry_secure @dotFname
    end
 
 end
-
-__END__
-#!/bin/sh
-
-test_description='todo.sh basic null functionality test.
-
-This test just makes sure the basic commands work,
-when there are no todos.
-'
-. ./test-lib.sh
-
-#
-# ls|list
-#
-cat > expect <<EOF
---
-TODO: 0 of 0 tasks shown
-EOF
-
-test_expect_success 'null ls' '
-    todo.sh ls > output && test_cmp expect output
-'
-test_expect_success 'null list' '
-    todo.sh list > output && test_cmp expect output
-'
-test_expect_success 'null list filter' '
-    todo.sh list filter > output && test_cmp expect output
-'
-
-#
-# lsp|listpri
-#
-# Re-use expect from ls.
-test_expect_success 'null lsp' '
-    todo.sh lsp > output && test_cmp expect output
-'
-test_expect_success 'null listpri' '
-    todo.sh listpri > output && test_cmp expect output
-'
-test_expect_success 'null listpri a' '
-    todo.sh listpri a > output && test_cmp expect output
-'
-
-#
-# lsa|listall
-#
-cat > expect <<EOF
---
-TODO: 0 of 0 tasks shown
-EOF
-
-test_expect_success 'null lsa' '
-    todo.sh lsa > output && test_cmp expect output
-'
-test_expect_success 'null list' '
-    todo.sh listall > output && test_cmp expect output
-'
-test_expect_success 'null list filter' '
-    todo.sh listall filter > output && test_cmp expect output
-'
-
-
-#
-# lsc|listcon
-#
-test_expect_success 'null lsc' '
-    todo.sh lsc > output && ! test -s output
-'
-test_expect_success 'null listcon' '
-    todo.sh listcon > output && ! test -s output
-'
-
-#
-# lsprj|listproj
-#
-test_expect_success 'null lsprj' '
-    todo.sh lsprj > output && ! test -s output
-'
-test_expect_success 'null listproj' '
-    todo.sh listproj > output && ! test -s output
-'
-
-#
-# lf|listfile
-#
-cat > expect <<EOF
-TODO: File  does not exist.
-EOF
-# XXX really should give a better usage error message here.
-test_expect_success 'null lf' '
-    todo.sh lf > output || test_cmp expect output
-'
-test_expect_success 'null listfile' '
-    todo.sh listfile > output || test_cmp expect output
-'
-cat > expect <<EOF
-TODO: File foo.txt does not exist.
-EOF
-test_expect_success 'null listfile foo.txt' '
-    todo.sh listfile foo.txt > output || test_cmp expect output
-'
-
-test_done
