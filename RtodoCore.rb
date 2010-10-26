@@ -14,8 +14,15 @@ class Rtodo
       false
    end
 
+   def add(task)
+      @all_tasks.push(task)
+      return (@all_tasks.length.to_s + ' ' + task)
+   end
+
    def ls(filter = '')
-      Array.new
+      out = Array.new
+      @all_tasks.each_with_index { |el,i| out.push((i + 1).to_s + ' ' + el.to_s) if el.upcase.include?(filter.upcase)}
+      out
    end
 
    def lsp(priority = '')
@@ -98,7 +105,7 @@ class Rtodo
       @help = "  Usage: #{@oneline_help}
 
   Actions: (X means not implemented yet)
-  #{self.add                 ? ' ' : 'X'} add|a \"THING I NEED TO DO +project @context\"
+     add|a \"THING I NEED TO DO +project @context\"
   #{self.addm                ? ' ' : 'X'} addm \"THINGS I NEED TO DO
   #{self.addto               ? ' ' : 'X'} addto DEST \"TEXT TO ADD\"
         MORE THINGS I NEED TO DO\"
@@ -126,7 +133,7 @@ class Rtodo
       @long_help = "  Usage: #{@oneline_help}
 
   Actions:
-  #{self.add ? ' ' : 'X'} add \"THING I NEED TO DO +project @context\"
+    add \"THING I NEED TO DO +project @context\"
     a \"THING I NEED TO DO +project @context\"
       Adds THING I NEED TO DO to your todo.txt file on its own line.
       Project and context notation optional.
