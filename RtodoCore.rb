@@ -14,9 +14,10 @@ class Rtodo
       false
    end
 
-   def add(task)
-      @all_tasks.push(task)
-      return (@all_tasks.length.to_s + ' ' + task)
+   def add(task, opt = {:add_time => false})
+      _task = ((opt[:add_time] ? Time.now.strftime('%Y-%m-%d') + ' ' : '' )+ task)
+      @all_tasks.push(_task)
+      return (@all_tasks.length.to_s + ' ' + _task)
    end
 
    def ls(filter = '')

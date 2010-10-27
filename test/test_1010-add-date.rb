@@ -5,13 +5,31 @@ require 'RtodoCore'
 class Test1010_date < Test::Unit::TestCase
 
    def setup
+      @tmpdir = "temp"
+      Dir.mkdir(@tmpdir)
+
+      @dotFname = File.expand_path("temp.cfg")
+
+      open(@dotFname, 'w') { |f|
+            f.puts "export TODO_DIR=\"#{@tmpdir}\"
+export TODO_FILE=\"$TODO_DIR/todo.txt\"
+"
+      }
+
+       @rtodo = Rtodo.new({:dotfile => @dotFname})
    end
 
-   #def test_NOT_IMPLEMENTED
-      #flunk("OOPS")
-   #end
+   def test_add_list_time
+      tasks = ['conquer the World']
+
+      assert_equal('1 ' + Time.now.strftime('%Y-%m-%d') + ' ' + tasks[0], @rtodo.add(tasks[0], :add_time => true))
+
+      assert_equal(['1 ' + Time.now.strftime('%Y-%m-%d') + ' ' + tasks[0]], @rtodo.ls)
+   end
 
    def teardown
+      FileUtils.remove_entry_secure @tmpdir
+      FileUtils.remove_entry_secure @dotFname
    end
 
 end
