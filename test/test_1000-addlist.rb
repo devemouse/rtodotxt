@@ -31,7 +31,7 @@ export TODO_FILE=\"$TODO_DIR/todo.txt\"
 
       task = 'be a milionare'
       assert_equal('2 ' + task, @rtodo.add(task))
-      assert_equal('2 ' + task, @rtodo.ls[1])
+      assert_equal('2 ' + task, @rtodo.ls[0])
    end
 
    def test_add_and_list_filtered

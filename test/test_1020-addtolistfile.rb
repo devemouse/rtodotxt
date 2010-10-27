@@ -5,13 +5,69 @@ require 'RtodoCore'
 class Test1020_addToListFile < Test::Unit::TestCase
 
    def setup
+      @env_bkp = ENV['TODOTXT_CFG_FILE']
+      ENV['TODOTXT_CFG_FILE'] = '' unless (@env_bkp.nil? or @env_bkp == '')
+
+      self.hideFile(ENV['TODOTXT_CFG_FILE'].to_s)
+      self.hideFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
+      self.hideFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
+
+      @tmpdir = "temp"
+      Dir.mkdir(@tmpdir)
+
+      @dotFname = File.expand_path("temp.cfg")
+
+      open(@dotFname, 'w') { |f|
+            f.puts "export TODO_DIR=\"#{@tmpdir}\"
+export TODO_FILE=\"$TODO_DIR/todo.txt\"
+"
+      }
+
+      @tmpFileName = "garden.txt"
+
+      @rtodo = Rtodo.new({:dotfile => @dotFname})
    end
 
-   #def test_NOT_IMPLEMENTED
-      #flunk("OOPS")
-   #end
+
+
+   def test_addto_not_existing_file
+      skip("Not sure if RtodoCore will support addto directly. This would be higher level task.")
+      assert_raise(IOError) { @rtodo.addto(@tmpFileName, 'notice the daisies')}
+   end
+
+
+   def test_addto_existing_file
+      skip("Not sure if RtodoCore will support addto directly. This would be higher level task.")
+      File.open(@tmpFileName, 'w') {|f| }
+      assert_nothing_raised(IOError) {
+         task = 'be a misionare'
+         assert_equal('1 ' + task, @rtodo.addto(@tmpFileName, task))
+      }
+   end
 
    def teardown
+      FileUtils.remove_entry_secure @tmpdir
+      FileUtils.remove_entry_secure @dotFname
+      FileUtils.remove_entry_secure @tmpFileName if File.exists?(@tmpFileName)
+
+      # restore ENV
+      ENV['TODOTXT_CFG_FILE'] = @env_bkp unless (@env_bkp.nil? or @env_bkp == '')
+
+      restoreFile(ENV['TODOTXT_CFG_FILE'].to_s)
+      restoreFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
+      restoreFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
+   end
+
+   def hideFile(filename)
+      if File.exists?(filename)
+         FileUtils.mv(filename, filename + ".bak", :verbose => @verbose)
+      end
+   end
+
+   def restoreFile(filename)
+      if File.exists?(filename + ".bak")
+         FileUtils.mv(filename + ".bak", filename, :verbose => @verbose)
+      end
    end
 
 end
@@ -25,15 +81,6 @@ This test just makes sure the basic addto and listfile
 commands work, including support for filtering.
 '
 . ./test-lib.sh
-
-#
-# Addto and listfile
-#
-test_todo_session 'nonexistant file' <<EOF
->>> todo.sh addto garden.txt notice the daisies
-TODO: Destination file $HOME/garden.txt does not exist.
-=== 1
-EOF
 
 touch "$HOME/garden.txt"
 

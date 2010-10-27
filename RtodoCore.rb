@@ -1,5 +1,6 @@
 
 require 'RTask'
+require 'pp'
 
 class String
    def color(color)
@@ -8,21 +9,76 @@ class String
 end
 
 class Rtodo
-   attr_reader :short_help, :help, :long_help, :oneline_help, :all_tasks
+   attr_reader :short_help, :help, :long_help, :oneline_help, :all_tasks, :opts
 
    def method_missing(method, *arg)
       false
    end
 
    def add(task, opt = {:add_time => false})
-      _task = ((opt[:add_time] ? Time.now.strftime('%Y-%m-%d') + ' ' : '' )+ task)
-      @all_tasks.push(_task)
-      return (@all_tasks.length.to_s + ' ' + _task)
+      _task = (((opt[:add_time] || (@opts[:dotfile]['TODOTXT_DATE_ON_ADD'] == '1')) ? Time.now.strftime('%Y-%m-%d') + ' ' : '' )+ task)
+
+      tsk = {:text => _task, :line => (@all_tasks.length + 1) }
+
+      @all_tasks.push(tsk)
+      @all_tasks = @all_tasks.sort_by { |obj| obj[:text]}
+
+      return (tsk[:line].to_s + ' ' + tsk[:text].to_s)
    end
 
-   def ls(filter = '')
+   def ls(*args)
       out = Array.new
-      @all_tasks.each_with_index { |el,i| out.push((i + 1).to_s + ' ' + el.to_s) if el.upcase.include?(filter.upcase)}
+      filtered_tasks = Array.new
+      opt = Hash.new
+      @all_tasks.each_with_index do |el,i| 
+         to_return = true
+
+         unless args.nil?
+            args.each do |param|
+               if param.class == String
+                  unless el[:text].match(Regexp.new(param.to_s, Regexp::IGNORECASE))
+                     to_return = false
+                     break
+                  end
+               else
+                  opt = param
+               end
+            end
+         end
+
+         if to_return 
+            filtered_tasks.push el
+         end
+      end
+
+
+      if filtered_tasks.length < 10
+         len = 1
+      else
+         if filtered_tasks.length < 100
+            len = 2
+         else
+            if filtered_tasks.length < 1000
+               len = 3
+            else
+               len = 4
+            end
+         end
+      end
+
+
+      format = "%0#{len}d %s" 
+
+      filtered_tasks.each {|el| 
+         #print 'before '
+         #pp el
+         el[:text].sub!(/\([A-Z]\) /,'') if opt[:hide_priority]
+         el[:text].sub!(/(\+\w+) /,'') if opt[:hide_project]
+         el[:text].sub!(/(@\w+) /,'') if opt[:hide_context]
+         #print 'after '
+         #pp el
+         out.push(format % [(el[:line]), el[:text]]) unless (el[:text].empty?)
+      }
       out
    end
 
@@ -40,6 +96,13 @@ class Rtodo
 
    def lsprj()
       Array.new
+   end
+   
+   def addto(file, opt)
+      if (File.exists?(file))
+      else
+         raise IOError
+      end
    end
 
    def lf(file = "", filter = "")
@@ -60,15 +123,27 @@ class Rtodo
 
    def parse_dotfile(file_name)
       retval = nil
-      if File.exists?(file_name)
          retval = Hash.new
-         File.new(file_name).each do |line| 
-            if /^ *export *(.*)=[ '\"]*([^\s'\"]*)[\s'\"]*/.match(line) then
-               retval[$1] = $2
-            end
-         end 
-      end
+         open(file_name, 'r') { |f|
+            f.each do |line| 
+               if /^ *export *(.*)=[ '\"]*([^\s'\"]*)[\s'\"]*/.match(line) then
+                  retval[$1] = $2
+               end
+            end 
+         }
       retval
+   end
+
+   def get_todofile_name(dir, todo_file)
+      if todo_file.include?('/')
+         todo_file = todo_file.split('/')
+      else
+         todo_file = todo_file.split('\\')
+      end
+
+      todo_file = todo_file.last
+
+      File.join(dir, todo_file)
    end
 
    def initialize (params = {:dotfile => '',
@@ -87,7 +162,8 @@ class Rtodo
 
       cfgfilesToCheck.each do |el|
          if File.exists?(el.to_s)
-            @opts[:dotfile] = 1
+            @opts[:dotfile] = parse_dotfile(el.to_s)
+            break
          end
       end
 
@@ -97,6 +173,20 @@ class Rtodo
 
       @all_tasks = Array.new
 
+      unless @opts[:dotfile]["TODO_DIR"].nil? ||  @opts[:dotfile]["TODO_FILE"].nil?
+         todoName = get_todofile_name(@opts[:dotfile]["TODO_DIR"], @opts[:dotfile]["TODO_FILE"])
+         if File.exists?(todoName)
+            open(todoName, 'r') { |f|
+               i = 0
+               @all_tasks = f.map do |line|
+                  i+=1
+                  {:text => line.chomp, :line => i}
+               end
+            }
+         end
+      end
+
+      @all_tasks = @all_tasks.sort_by { |obj| obj[:text]}
 
 
       @oneline_help="rtodo [-fhpantvV] [-d todo_config] action [task_number] [task_description]"
@@ -108,7 +198,7 @@ class Rtodo
   Actions: (X means not implemented yet)
      add|a \"THING I NEED TO DO +project @context\"
   #{self.addm                ? ' ' : 'X'} addm \"THINGS I NEED TO DO
-  #{self.addto               ? ' ' : 'X'} addto DEST \"TEXT TO ADD\"
+    addto DEST \"TEXT TO ADD\"
         MORE THINGS I NEED TO DO\"
   #{self.append              ? ' ' : 'X'} append|app ITEM# \"TEXT TO APPEND\"
   #{self.archive             ? ' ' : 'X'} archive
@@ -147,7 +237,7 @@ class Rtodo
       Project and context notation optional.
       Quotes optional.
 
-  #{self.addto ? ' ' : 'X'} addto DEST \"TEXT TO ADD\"
+    addto DEST \"TEXT TO ADD\"
       Adds a line of text to any file located in the todo.txt directory.
       For example, addto inbox.txt \"decide about vacation\"
 

@@ -1,10 +1,18 @@
 #!/usr/bin/env ruby
 require 'test/unit'
 require 'RtodoCore'
+require 'pp'
 
 class Test1010_date < Test::Unit::TestCase
 
    def setup
+      @env_bkp = ENV['TODOTXT_CFG_FILE']
+      ENV['TODOTXT_CFG_FILE'] = '' unless (@env_bkp.nil? or @env_bkp == '')
+
+      self.hideFile(ENV['TODOTXT_CFG_FILE'].to_s)
+      self.hideFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
+      self.hideFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
+
       @tmpdir = "temp"
       Dir.mkdir(@tmpdir)
 
@@ -45,39 +53,25 @@ export TODO_FILE=\"$TODO_DIR/todo.txt\"
    def teardown
       FileUtils.remove_entry_secure @tmpdir
       FileUtils.remove_entry_secure @dotFname
+
+      # restore ENV
+      ENV['TODOTXT_CFG_FILE'] = @env_bkp unless (@env_bkp.nil? or @env_bkp == '')
+
+      restoreFile(ENV['TODOTXT_CFG_FILE'].to_s)
+      restoreFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
+      restoreFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
    end
 
+   def hideFile(filename)
+      if File.exists?(filename)
+         FileUtils.mv(filename, filename + ".bak", :verbose => @verbose)
+      end
+   end
+
+   def restoreFile(filename)
+      if File.exists?(filename + ".bak")
+         FileUtils.mv(filename + ".bak", filename, :verbose => @verbose)
+      end
+   end
 end
 
-__END__
-#!/bin/sh
-
-test_description='test the date on add feature
-
-Tests paths by which we might automatically add
-a date to each item.
-'
-. ./test-lib.sh
-
-
-# Switch to config file
-echo "export TODOTXT_DATE_ON_ADD=1" >> todo.cfg
-
-# Bump the clock, for good measure.
-test_tick 3600
-
-test_todo_session 'config file third day' <<EOF
->>> todo.sh add take out the trash
-4 2009-02-15 take out the trash
-TODO: 4 added.
-
->>> todo.sh list
-1 2009-02-13 notice the daisies
-2 2009-02-14 smell the roses
-3 2009-02-15 mow the lawn
-4 2009-02-15 take out the trash
---
-TODO: 4 of 4 tasks shown
-EOF
-
-test_done

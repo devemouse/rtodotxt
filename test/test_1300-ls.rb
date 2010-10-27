@@ -5,13 +5,103 @@ require 'RtodoCore'
 class Test1300_ls < Test::Unit::TestCase
 
    def setup
+      @env_bkp = ENV['TODOTXT_CFG_FILE']
+      ENV['TODOTXT_CFG_FILE'] = '' unless (@env_bkp.nil? or @env_bkp == '')
+
+      self.hideFile(ENV['TODOTXT_CFG_FILE'].to_s)
+      self.hideFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
+      self.hideFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
+
+      @tmpdir = "temp"
+      @todoFileName = 'todo.txt'
+      Dir.mkdir(@tmpdir)
+
+      @dotFname = File.expand_path("temp.cfg")
+
+      open(@dotFname, 'w') { |f|
+            f.puts "export TODO_DIR=\"#{@tmpdir}\"
+export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
+"
+      }
+
+      @tasks = [
+                'ccc xxx this line should be third.',
+                'aaa zzz this line should be first.',
+                'bbb yyy this line should be second.',
+               ].sort
+
+               #note diffrient sequence
+      open(File.join(@tmpdir, @todoFileName), 'w') { |f|
+         f.puts @tasks[2]
+         f.puts @tasks[0]
+         f.puts @tasks[1]
+      }
+
+
+       @rtodo = Rtodo.new({:dotfile => @dotFname})
    end
 
-   #def test_NOT_IMPLEMENTED
-      #flunk("OOPS")
-   #end
-
    def teardown
+      FileUtils.remove_entry_secure File.join(@tmpdir, @todoFileName)
+      FileUtils.remove_entry_secure @dotFname
+      FileUtils.remove_entry_secure @tmpdir
+
+      # restore ENV
+      ENV['TODOTXT_CFG_FILE'] = @env_bkp unless (@env_bkp.nil? or @env_bkp == '')
+
+      restoreFile(ENV['TODOTXT_CFG_FILE'].to_s)
+      restoreFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
+      restoreFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
+   end
+
+   def hideFile(filename)
+      if File.exists?(filename)
+         FileUtils.mv(filename, filename + ".bak", :verbose => @verbose)
+      end
+   end
+
+   def restoreFile(filename)
+      if File.exists?(filename + ".bak")
+         FileUtils.mv(filename + ".bak", filename, :verbose => @verbose)
+      end
+   end
+
+   def test_ls
+      _tasks = [
+                '2 aaa zzz this line should be first.',
+                '3 bbb yyy this line should be second.',
+                '1 ccc xxx this line should be third.',
+               ]
+
+      assert_equal(_tasks, @rtodo.ls)
+   end
+
+   def test_ls_filtered
+      _tasks = [
+                '2 aaa zzz this line should be first.',
+                '3 bbb yyy this line should be second.',
+                '1 ccc xxx this line should be third.',
+               ]
+
+      assert_equal([_tasks[1]], @rtodo.ls("second"))
+
+      assert_equal([_tasks[0]], @rtodo.ls("should be f"))
+
+      assert_equal([_tasks[2]], @rtodo.ls("xxx"))
+   end
+
+   def test_ls_filtered_regexp
+      _tasks = [
+                '2 aaa zzz this line should be first.',
+                '3 bbb yyy this line should be second.',
+                '1 ccc xxx this line should be third.',
+               ]
+
+      assert_equal([_tasks[0], _tasks[2]], @rtodo.ls("ir[ds]"))
+
+      assert_equal([_tasks[0]], @rtodo.ls("f.*t"))
+
+      assert_equal([_tasks[2]], @rtodo.ls("ir[ds]", "xxx"))
    end
 
 end
@@ -36,7 +126,7 @@ bbb yyy this line should be second.
 EOF
 
 #
-# check the sort filter
+# check the sort filter (DS: done but custom sort not avaliable)
 #
 TEST_TODO1_=todo1.cfg
 sed -e "s/^.*export TODOTXT_SORT_COMMAND=.*$/export TODOTXT_SORT_COMMAND='env LC_COLLATE=C sort -r -f -k2'/" "${TEST_TODO_}" > "${TEST_TODO1_}"
@@ -58,7 +148,7 @@ TODO: 3 of 3 tasks shown
 EOF
 
 #
-# check the final filter
+# check the final filter (DS: not implemented)
 #
 TEST_TODO2_=todo2.cfg
 sed -e "s%^.*export TODOTXT_FINAL_FILTER=.*$%export TODOTXT_FINAL_FILTER=\"sed 's/^\\\(..\\\{20\\\}\\\).....*$/\\\1.../'\"%" "${TEST_TODO_}" > "${TEST_TODO2_}"
@@ -70,47 +160,6 @@ test_todo_session 'checking TODOTXT_FINAL_FILTER' <<EOF
 1 ccc xxx this line s...
 --
 TODO: 3 of 3 tasks shown
-EOF
-
-#
-# check the filtering of TERM
-#
-test_todo_session 'checking filtering of TERM' <<EOF
->>> todo.sh ls second
-3 bbb yyy this line should be second.
---
-TODO: 1 of 3 tasks shown
-
->>> todo.sh ls "should be f"
-2 aaa zzz this line should be first.
---
-TODO: 1 of 3 tasks shown
-
->>> todo.sh ls " zzz"
-2 aaa zzz this line should be first.
---
-TODO: 1 of 3 tasks shown
-EOF
-
-#
-# check the filtering of TERM with regexp
-#
-test_todo_session 'checking filtering of TERM with regexp' <<EOF
->>> todo.sh ls "ir[ds]"
-2 aaa zzz this line should be first.
-1 ccc xxx this line should be third.
---
-TODO: 2 of 3 tasks shown
-
->>> todo.sh ls "f.*t"
-2 aaa zzz this line should be first.
---
-TODO: 1 of 3 tasks shown
-
->>> todo.sh ls "ir[ds]" xxx
-1 ccc xxx this line should be third.
---
-TODO: 1 of 3 tasks shown
 EOF
 
 #
@@ -141,7 +190,7 @@ TODO: 3 of 3 tasks shown
 EOF
 
 #
-# check the p command line option
+# check the p command line option (DS: Rtodo:CLI class will be added for such output)
 #
 cat > todo.txt <<EOF
 (A) @con01 +prj01 -- Some project 01 task, pri A
