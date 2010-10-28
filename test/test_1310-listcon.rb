@@ -92,6 +92,22 @@ export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
       assert_equal(contexts, @rtodo.lsc)
    end
 
+   def test_multicontext
+      createTodoFile(@tmpdir, @todoFileName, [
+         '@con01 -- Some context 1 task',
+         '@con02 -- Some context 2 task',
+         '@con02 ginatrapani@gmail.com -- Some context 2 task',
+      ])
+
+      @rtodo = Rtodo.new({:dotfile => @dotFname})
+
+      contexts = [
+         '@con01',
+         '@con02',
+      ]
+
+      assert_equal(contexts, @rtodo.lsc)
+   end
 end
 
 __END__
@@ -105,17 +121,6 @@ This test checks basic context listing functionality
 . ./test-lib.sh
 
 
-cat > todo.txt <<EOF
-@con01 -- Some context 1 task
-@con02 -- Some context 2 task
-@con02 @con03 -- Multi-context task
-EOF
-test_todo_session 'Multi-context per line' <<EOF
->>> todo.sh listcon
-@con01
-@con02
-@con03
-EOF
 
 cat > todo.txt <<EOF
 @con01 -- Some context 1 task
