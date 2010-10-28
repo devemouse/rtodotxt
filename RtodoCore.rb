@@ -11,8 +11,11 @@ end
 class Rtodo
    attr_reader :short_help, :help, :long_help, :oneline_help, :all_tasks, :opts
    PriorityRegexp = /\([A-Z]\) /
-   ProjectRegexp = /(\+\w+) /i
+   PriorityRegexpG = /\G\([A-Z]\) /
+   ProjectRegexp = /(\+[^ ]+) /i
+   ProjectRegexpG = /\G(\+[^ ]+) /i
    ContextRegexp = /(@[^ ]+) /i
+   ContextRegexpG = /\G(@[^ ]+) /i
 
    def method_missing(method, *arg)
       false
@@ -99,7 +102,7 @@ class Rtodo
       @all_tasks.each do |el| 
          if el[:text].match(ContextRegexp)
             out.push($1)
-            while $'.match(/\G(@[^ ]+) /i)
+            while $'.match(ContextRegexpG)
                out.push($1)
             end
          end
@@ -108,9 +111,19 @@ class Rtodo
    end
 
    def lsprj()
-      Array.new
+      out = Array.new
+
+      @all_tasks.each do |el| 
+         if el[:text].match(ProjectRegexp)
+            out.push($1)
+            while $'.match(ProjectRegexpG)
+               out.push($1)
+            end
+         end
+      end
+      out.uniq
    end
-   
+
    def addto(file, opt)
       if (File.exists?(file))
       else
