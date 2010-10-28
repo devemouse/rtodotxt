@@ -92,11 +92,12 @@ export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
       assert_equal(contexts, @rtodo.lsc)
    end
 
-   def test_multicontext
+   def test_mail
       createTodoFile(@tmpdir, @todoFileName, [
          '@con01 -- Some context 1 task',
          '@con02 -- Some context 2 task',
          '@con02 ginatrapani@gmail.com -- Some context 2 task',
+         '@con03 ginatrapani@gmail.com -- Some context 2 task',
       ])
 
       @rtodo = Rtodo.new({:dotfile => @dotFname})
@@ -104,33 +105,10 @@ export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
       contexts = [
          '@con01',
          '@con02',
+         '@con03',
       ]
 
       assert_equal(contexts, @rtodo.lsc)
    end
 end
 
-__END__
-#!/bin/sh
-#
-
-test_description='listcon functionality
-
-This test checks basic context listing functionality
-'
-. ./test-lib.sh
-
-
-
-cat > todo.txt <<EOF
-@con01 -- Some context 1 task
-@con02 -- Some context 2 task
-@con02 ginatrapani@gmail.com -- Some context 2 task
-EOF
-test_todo_session 'listcon e-mail address test' <<EOF
->>> todo.sh listcon
-@con01
-@con02
-EOF
-
-test_done
