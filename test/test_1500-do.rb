@@ -1,17 +1,46 @@
 #!/usr/bin/env ruby
 require 'test/unit'
 require 'RtodoCore'
+require 'test/lib_tests.rb'
 
 class Test1500_do < Test::Unit::TestCase
 
    def setup
+      @env_bkp = ENV['TODOTXT_CFG_FILE']
+      ENV['TODOTXT_CFG_FILE'] = '' unless (@env_bkp.nil? or @env_bkp == '')
+
+      hideFile(ENV['TODOTXT_CFG_FILE'].to_s)
+      hideFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
+      hideFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
+
+      @tmpdir = "temp"
+      @todoFileName = 'todo.txt'
+      Dir.mkdir(@tmpdir)
+
+      @dotFname = File.expand_path("temp.cfg")
+
+      open(@dotFname, 'w') { |f|
+            f.puts "export TODO_DIR=\"#{@tmpdir}\"
+export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
+"
+      }
    end
 
-   #def test_NOT_IMPLEMENTED
-      #flunk("OOPS")
-   #end
-
    def teardown
+      FileUtils.remove_entry_secure File.join(@tmpdir, @todoFileName)
+      FileUtils.remove_entry_secure @dotFname
+      FileUtils.remove_entry_secure @tmpdir
+
+      # restore ENV
+      ENV['TODOTXT_CFG_FILE'] = @env_bkp unless (@env_bkp.nil? or @env_bkp == '')
+
+      restoreFile(ENV['TODOTXT_CFG_FILE'].to_s)
+      restoreFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
+      restoreFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
+   end
+
+   def test_bla
+      flunk("Failure message.")
    end
 
 end
