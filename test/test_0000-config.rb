@@ -2,6 +2,7 @@
 require 'test/unit'
 require 'RtodoCore'
 require 'fileutils'
+require 'test/lib_tests.rb'
 
 
 class Test0000_Config < Test::Unit::TestCase
@@ -11,9 +12,9 @@ class Test0000_Config < Test::Unit::TestCase
       @env_bkp = ENV['TODOTXT_CFG_FILE']
       ENV['TODOTXT_CFG_FILE'] = '' unless (@env_bkp.nil? or @env_bkp == '')
 
-      self.hideFile(ENV['TODOTXT_CFG_FILE'].to_s)
-      self.hideFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
-      self.hideFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
+      hideFile(ENV['TODOTXT_CFG_FILE'].to_s)
+      hideFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
+      hideFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
 
       @fname = "temp.cfg"
       unless File.exists?(@fname)
@@ -23,18 +24,6 @@ class Test0000_Config < Test::Unit::TestCase
       end
 
       @verbose = false
-   end
-
-   def hideFile(filename)
-      if File.exists?(filename)
-         FileUtils.mv(filename, filename + ".bak", :verbose => @verbose)
-      end
-   end
-
-   def restoreFile(filename)
-      if File.exists?(filename + ".bak")
-         FileUtils.mv(filename + ".bak", filename, :verbose => @verbose)
-      end
    end
 
    def test_noConfig

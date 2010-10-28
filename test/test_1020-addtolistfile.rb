@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require 'test/unit'
 require 'RtodoCore'
+require 'test/lib_tests.rb'
 
 class Test1020_addToListFile < Test::Unit::TestCase
 
@@ -8,9 +9,9 @@ class Test1020_addToListFile < Test::Unit::TestCase
       @env_bkp = ENV['TODOTXT_CFG_FILE']
       ENV['TODOTXT_CFG_FILE'] = '' unless (@env_bkp.nil? or @env_bkp == '')
 
-      self.hideFile(ENV['TODOTXT_CFG_FILE'].to_s)
-      self.hideFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
-      self.hideFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
+      hideFile(ENV['TODOTXT_CFG_FILE'].to_s)
+      hideFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
+      hideFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
 
       @tmpdir = "temp"
       Dir.mkdir(@tmpdir)
@@ -58,17 +59,7 @@ export TODO_FILE=\"$TODO_DIR/todo.txt\"
       restoreFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
    end
 
-   def hideFile(filename)
-      if File.exists?(filename)
-         FileUtils.mv(filename, filename + ".bak", :verbose => @verbose)
-      end
-   end
 
-   def restoreFile(filename)
-      if File.exists?(filename + ".bak")
-         FileUtils.mv(filename + ".bak", filename, :verbose => @verbose)
-      end
-   end
 
 end
 

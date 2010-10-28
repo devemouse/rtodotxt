@@ -1,18 +1,79 @@
 #!/usr/bin/env ruby
 require 'test/unit'
 require 'RtodoCore'
+require 'test/lib_tests.rb'
 
 class Test1310_ListCon < Test::Unit::TestCase
 
    def setup
-   end
+      @env_bkp = ENV['TODOTXT_CFG_FILE']
+      ENV['TODOTXT_CFG_FILE'] = '' unless (@env_bkp.nil? or @env_bkp == '')
 
-   #def test_NOT_IMPLEMENTED
-      #flunk("OOPS")
-   #end
+      hideFile(ENV['TODOTXT_CFG_FILE'].to_s)
+      hideFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
+      hideFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
+
+      @tmpdir = "temp"
+      @todoFileName = 'todo.txt'
+      Dir.mkdir(@tmpdir)
+
+      @dotFname = File.expand_path("temp.cfg")
+
+      open(@dotFname, 'w') { |f|
+            f.puts "export TODO_DIR=\"#{@tmpdir}\"
+export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
+"
+      }
+
+      @tasks = [
+                  '(A) @con01 +prj01 -- Some project 01 task, pri A', 
+                  '(A) @con01 +prj02 -- Some project 02 task, pri A', 
+                  '(A) @con02 +prj03 -- Some project 03 task, pri A', 
+                  '(A) @con02 +prj04 -- Some project 04 task, pri A', 
+                  '(B) @con01 +prj01 -- Some project 01 task, pri B', 
+                  '(B) @con01 +prj02 -- Some project 02 task, pri B', 
+                  '(B) @con02 +prj03 -- Some project 03 task, pri B', 
+                  '(B) @con02 +prj04 -- Some project 04 task, pri B', 
+                  '(C) @con01 +prj01 -- Some project 01 task, pri C', 
+                  '(C) @con01 +prj02 -- Some project 02 task, pri C', 
+                  '(C) @con02 +prj03 -- Some project 03 task, pri C', 
+                  '(C) @con02 +prj04 -- Some project 04 task, pri C', 
+                  '(D) @con01 +prj01 -- Some project 01 task, pri D', 
+                  '(D) @con01 +prj02 -- Some project 02 task, pri D', 
+                  '(D) @con02 +prj03 -- Some project 03 task, pri D', 
+                  '(D) @con02 +prj04 -- Some project 04 task, pri D', 
+                  '@con01 +prj01 -- Some project 01 task, no priority', 
+                  '@con01 +prj02 -- Some project 02 task, no priority', 
+                  '@con02 +prj03 -- Some project 03 task, no priorty', 
+                  '@con02 +prj04 -- Some project 04 task, no priority', 
+               ].sort
+
+               #note diffrient sequence
+      open(File.join(@tmpdir, @todoFileName), 'w') { |f|
+         @tasks.each {|el| f.puts el}
+      }
+
+
+       @rtodo = Rtodo.new({:dotfile => @dotFname})
+   end
 
    def teardown
+      FileUtils.remove_entry_secure File.join(@tmpdir, @todoFileName)
+      FileUtils.remove_entry_secure @dotFname
+      FileUtils.remove_entry_secure @tmpdir
+
+      # restore ENV
+      ENV['TODOTXT_CFG_FILE'] = @env_bkp unless (@env_bkp.nil? or @env_bkp == '')
+
+      restoreFile(ENV['TODOTXT_CFG_FILE'].to_s)
+      restoreFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
+      restoreFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
    end
+
+   def test_no_contexts
+      flunk("not implemented")
+   end
+
 
 end
 
