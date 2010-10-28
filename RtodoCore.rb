@@ -10,6 +10,9 @@ end
 
 class Rtodo
    attr_reader :short_help, :help, :long_help, :oneline_help, :all_tasks, :opts
+   PriorityRegexp = /\([A-Z]\) /
+   ProjectRegexp = /(\+\w+) /i
+   ContextRegexp = /(@[^ ]+) /i
 
    def method_missing(method, *arg)
       false
@@ -72,9 +75,9 @@ class Rtodo
       filtered_tasks.each {|el| 
          #print 'before '
          #pp el
-         el[:text].sub!(/\([A-Z]\) /,'') if opt[:hide_priority]
-         el[:text].sub!(/(\+\w+) /,'') if opt[:hide_project]
-         el[:text].sub!(/(@\w+) /,'') if opt[:hide_context]
+         el[:text].sub!(PriorityRegexp,'') if opt[:hide_priority]
+         el[:text].sub!(ProjectRegexp,'') if opt[:hide_project]
+         el[:text].sub!(ContextRegexp,'') if opt[:hide_context]
          #print 'after '
          #pp el
          out.push(format % [(el[:line]), el[:text]]) unless (el[:text].empty?)
@@ -91,7 +94,17 @@ class Rtodo
    end
 
    def lsc()
-      Array.new
+      out = Array.new
+
+      @all_tasks.each do |el| 
+         if el[:text].match(ContextRegexp)
+            out.push($1)
+            while $'.match(/\G(@[^ ]+) /i)
+               out.push($1)
+            end
+         end
+      end
+      out.uniq
    end
 
    def lsprj()
