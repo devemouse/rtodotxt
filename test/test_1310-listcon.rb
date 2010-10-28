@@ -25,13 +25,6 @@ export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
 "
       }
 
-      createTodoFile(@tmpdir, @todoFileName, [
-                 'item 1',
-                 'item 2',
-                 'item 3',
-      ])
-
-       @rtodo = Rtodo.new({:dotfile => @dotFname})
    end
 
    def teardown
@@ -48,6 +41,13 @@ export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
    end
 
    def test_no_contexts
+      createTodoFile(@tmpdir, @todoFileName, [
+                 'item 1',
+                 'item 2',
+                 'item 3',
+      ])
+
+       @rtodo = Rtodo.new({:dotfile => @dotFname})
       assert_equal([], @rtodo.lsc)
    end
 
