@@ -7,9 +7,9 @@ class Test1600_append < Test::Unit::TestCase
    def setup
    end
 
-   #def test_NOT_IMPLEMENTED
+   def test_NOT_IMPLEMENTED
       #flunk("OOPS")
-   #end
+   end
 
    def teardown
    end
