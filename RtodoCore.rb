@@ -88,6 +88,25 @@ class Rtodo
       out
    end
 
+   def do(*args)
+      if args.empty?
+         return false
+      end
+
+      list = @all_tasks
+      out = Array.new
+
+      pp @all_tasks
+
+      args.each do |param|
+         if param.kind_of?(Fixnum)
+            return true
+         end
+      end
+
+      false
+   end
+
    def lsp(priority = '')
       Array.new
    end
@@ -231,7 +250,7 @@ class Rtodo
   #{self.command             ? ' ' : 'X'} command [ACTIONS]
   #{self.del                 ? ' ' : 'X'} del|rm ITEM# [TERM]
   #{self.depri               ? ' ' : 'X'} dp|depri ITEM#[, ITEM#, ITEM#, ...]
-  #{self.do                  ? ' ' : 'X'} do ITEM#[, ITEM#, ITEM#, ...]
+    do ITEM#[, ITEM#, ITEM#, ...]
   #{self.help                ? ' ' : 'X'} help
   #{self.list                ? ' ' : 'X'} list|ls [TERM...]
   #{self.listall             ? ' ' : 'X'} listall|lsa [TERM...]
@@ -289,7 +308,7 @@ class Rtodo
       Deprioritizes (removes the priority) from the task(s)
       on line ITEM# in todo.txt.
 
-  #{self.do ? ' ' : 'X'} do ITEM#[, ITEM#, ITEM#, ...]
+    do ITEM#[, ITEM#, ITEM#, ...]
       Marks task(s) on line ITEM# as done in todo.txt.
 
   #{self.help ? ' ' : 'X'} help
