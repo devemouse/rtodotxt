@@ -36,7 +36,7 @@ class Rtodo
       out = Array.new
       filtered_tasks = Array.new
       opt = Hash.new
-      @all_tasks.each_with_index do |el,i| 
+      @all_tasks.each_with_index do |el,i|
          to_return = true
 
          unless args.nil?
@@ -52,7 +52,7 @@ class Rtodo
             end
          end
 
-         if to_return 
+         if to_return
             filtered_tasks.push el
          end
       end
@@ -73,9 +73,9 @@ class Rtodo
       end
 
 
-      format = "%0#{len}d %s" 
+      format = "%0#{len}d %s"
 
-      filtered_tasks.each {|el| 
+      filtered_tasks.each {|el|
          #print 'before '
          #pp el
          el[:text].sub!(PriorityRegexp,'') if opt[:hide_priority]
@@ -95,16 +95,27 @@ class Rtodo
 
       list = @all_tasks
       out = Array.new
+      to_out = Array.new
 
-      pp @all_tasks
+      #pp @all_tasks
 
       args.each do |param|
          if param.kind_of?(Fixnum)
-            return true
+            to_out.push param
          end
       end
 
-      false
+      date = Time.now.strftime('%Y-%m-%d').to_s
+
+      unless to_out.empty?
+         out = @all_tasks.select { |el| to_out.include?(el[:line])}
+
+         out.map!{ |el| el[:line].to_s + ' x ' + date + ' ' + el[:text] }
+
+         return out
+      else
+         return false
+      end
    end
 
    def lsp(priority = '')
@@ -118,7 +129,7 @@ class Rtodo
    def lsc()
       out = Array.new
 
-      @all_tasks.each do |el| 
+      @all_tasks.each do |el|
          if el[:text].match(ContextRegexp)
             out.push($1)
             while $'.match(ContextRegexp_G)
@@ -132,7 +143,7 @@ class Rtodo
    def lsprj()
       out = Array.new
 
-      @all_tasks.each do |el| 
+      @all_tasks.each do |el|
          if el[:text].match(ProjectRegexp)
             out.push($1)
             while $'.match(ProjectRegexp_G)
@@ -142,7 +153,7 @@ class Rtodo
       end
       out.uniq
    end
-   
+
    def addto(file, opt)
       if (File.exists?(file))
       else
@@ -170,11 +181,11 @@ class Rtodo
       retval = nil
          retval = Hash.new
          open(file_name, 'r') { |f|
-            f.each do |line| 
+            f.each do |line|
                if /^ *export *(.*)=[ '\"]*([^\s'\"]*)[\s'\"]*/.match(line) then
                   retval[$1] = $2
                end
-            end 
+            end
          }
       retval
    end

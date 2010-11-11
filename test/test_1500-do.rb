@@ -85,6 +85,7 @@ export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
             '1 smell the uppercase Roses +flowers @outside',
             '3 stop',
        ]
+
        assert_equal(output, rtodo.ls)
 
        date = Time.now.strftime('%Y-%m-%d').to_s
@@ -98,9 +99,18 @@ export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
        #RtodoCore shall be as fast as possible.
        #Later when I use this class in GUI version won't need extra
        #handling of '7,6' like input in here.
-       assert_equal(output, rtodo.do(7, 6))
+       #also output will be sorted
+       assert_equal(output.sort, rtodo.do(7, 6).sort)
 
+       output = [
+            '2 notice the sunflowers',
+            '4 remove1',
+            '5 remove2',
+            '1 smell the uppercase Roses +flowers @outside',
+            '3 stop',
+       ]
 
+       assert_equal(output, rtodo.ls)
    end
 end
 
