@@ -130,19 +130,39 @@ class Rtodo
       return false if item > @all_tasks.length
 
       out = ''
+      renumber = false
 
       @all_tasks.map!{ |el| 
          if el[:line] == item 
             out = el[:line].to_s + ' ' + el[:text].to_s unless el[:text].empty?
-            if opt[:preserve_line_num]
+            if true == opt[:preserve_line_num]
                el[:text] = ''
             else
                el = nil
+               renumber = true
+               puts 'HERE'
             end
          end
          el
       }
+
       @all_tasks.compact!
+
+      if renumber
+         @all_tasks = @all_tasks.sort_by { |obj| obj[:line]}
+         i = 1
+         @all_tasks = @all_tasks.map!{|el| 
+            if el[:text].empty?
+               el = nil
+            else
+               el[:line] = i
+               i+=1
+            end
+            el
+         }
+         @all_tasks.compact!
+         @all_tasks = @all_tasks.sort_by { |obj| obj[:text]}
+      end
 
       out.empty? ? false : out
    end
