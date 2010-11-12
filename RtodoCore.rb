@@ -133,7 +133,7 @@ class Rtodo
 
       @all_tasks.map!{ |el| 
          if el[:line] == item 
-            out = el[:line].to_s + ' ' + el[:text].to_s
+            out = el[:line].to_s + ' ' + el[:text].to_s unless el[:text].empty?
             if opt[:preserve_line_num]
                el[:text] = ''
             else
@@ -144,7 +144,7 @@ class Rtodo
       }
       @all_tasks.compact!
 
-      out
+      out.empty? ? false : out
    end
 
    def lsc()

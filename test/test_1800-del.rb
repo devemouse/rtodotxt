@@ -123,6 +123,33 @@ export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
       #at this point the 1 task does not exist anymore
       assert_equal(false, rtodo.del(1, {:preserve_line_num => true}))
 
+      task = 'A new task'
+
+      assert_equal('4 ' +task, rtodo.add(task))
+
+      tasks = [
+         '2 (A) notice the sunflowers',
+         '4 A new task',
+         '3 stop',
+      ]
+      assert_equal(tasks, rtodo.ls)
+
+      del_tasks = '2 (A) notice the sunflowers'
+
+      assert_equal(del_tasks, rtodo.del(2, {:preserve_line_num => false}))
+
+      task = 'Another new task'
+
+      assert_equal('3 ' +task, rtodo.add(task))
+
+      tasks = [
+         '2 A new task',
+         '3 Another new task',
+         '1 stop',
+      ]
+
+      assert_equal(tasks, rtodo.ls)
+
    end
 end
 
