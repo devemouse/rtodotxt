@@ -119,6 +119,10 @@ export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
       ]
 
       assert_equal(tasks, rtodo.ls)
+
+      #at this point the 1 task does not exist anymore
+      assert_equal(false, rtodo.del(1, {:preserve_line_num => true}))
+
    end
 end
 
