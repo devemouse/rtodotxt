@@ -126,7 +126,7 @@ class Rtodo
       Array.new
    end
 
-   def del(item, opt = {:preserve_line_num => false, :term => ''})
+   def del(item, opt = {:preserve_line_num => true, :term => ''})
       return false if item > @all_tasks.length
 
       out = ''

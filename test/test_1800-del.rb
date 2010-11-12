@@ -149,7 +149,36 @@ export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
       ]
 
       assert_equal(tasks, rtodo.ls)
+   end
 
+   def test_normal_delete_term
+      createTodoFile(@tmpdir, @todoFileName, [
+                     '(B) smell the uppercase Roses +flowers @outside',
+                     '(A) notice the sunflowers',
+                     '(C) stop',
+      ])
+
+      rtodo = Rtodo.new({:dotfile => @dotFname})
+
+      tasks = [
+         '2 (A) notice the sunflowers',
+         '1 (B) smell the uppercase Roses +flowers @outside',
+         '3 (C) stop',
+      ]
+
+      assert_equal(tasks, rtodo.ls)
+
+      del_tasks = '1 (B) smell the Roses +flowers @outside'
+
+      assert_equal(del_tasks, rtodo.del(1, {:term => 'uppercase'}))
+
+      tasks = [
+         '2 (A) notice the sunflowers',
+         '1 (B) smell the Roses +flowers @outside',
+         '3 (C) stop',
+      ]
+
+      assert_equal(tasks, rtodo.ls)
    end
 end
 
