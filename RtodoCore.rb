@@ -126,6 +126,27 @@ class Rtodo
       Array.new
    end
 
+   def del(item, opt = {:preserve_line_num => false, :term => ''})
+      return false if item > @all_tasks.length
+
+      out = ''
+
+      @all_tasks.map!{ |el| 
+         if el[:line] == item 
+            out = el[:line].to_s + ' ' + el[:text].to_s
+            if opt[:preserve_line_num]
+               el[:text] = ''
+            else
+               el = nil
+            end
+         end
+         el
+      }
+      @all_tasks.compact!
+
+      out
+   end
+
    def lsc()
       out = Array.new
 
@@ -259,7 +280,7 @@ class Rtodo
   #{self.append              ? ' ' : 'X'} append|app ITEM# \"TEXT TO APPEND\"
   #{self.archive             ? ' ' : 'X'} archive
   #{self.command             ? ' ' : 'X'} command [ACTIONS]
-  #{self.del                 ? ' ' : 'X'} del|rm ITEM# [TERM]
+    del|rm ITEM# [TERM]
   #{self.depri               ? ' ' : 'X'} dp|depri ITEM#[, ITEM#, ITEM#, ...]
     do ITEM#[, ITEM#, ITEM#, ...]
   #{self.help                ? ' ' : 'X'} help
@@ -309,7 +330,7 @@ class Rtodo
       Runs the remaining arguments using only todo.sh builtins.
       Will not call any .todo.actions.d scripts.
 
-  #{self.del ? ' ' : 'X'} del ITEM# [TERM]
+    del ITEM# [TERM]
     rm ITEM# [TERM]
       Deletes the task on line ITEM# in todo.txt.
       If TERM specified, deletes only TERM from the task.

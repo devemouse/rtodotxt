@@ -5,15 +5,121 @@ require 'RtodoCore'
 class Test1800_del < Test::Unit::TestCase
 
    def setup
-   end
+      @env_bkp = ENV['TODOTXT_CFG_FILE']
+      ENV['TODOTXT_CFG_FILE'] = '' unless (@env_bkp.nil? or @env_bkp == '')
 
-   def test_NOT_IMPLEMENTED
-      #flunk("OOPS")
+      hideFile(ENV['TODOTXT_CFG_FILE'].to_s)
+      hideFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
+      hideFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
+
+      @tmpdir = "temp"
+      @todoFileName = 'todo.txt'
+      Dir.mkdir(@tmpdir)
+
+      @dotFname = File.expand_path("temp.cfg")
+
+      open(@dotFname, 'w') { |f|
+            f.puts "export TODO_DIR=\"#{@tmpdir}\"
+export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
+"
+      }
    end
 
    def teardown
+      FileUtils.remove_entry_secure File.join(@tmpdir, @todoFileName)
+      FileUtils.remove_entry_secure @dotFname
+      FileUtils.remove_entry_secure @tmpdir
+
+      # restore ENV
+      ENV['TODOTXT_CFG_FILE'] = @env_bkp unless (@env_bkp.nil? or @env_bkp == '')
+
+      restoreFile(ENV['TODOTXT_CFG_FILE'].to_s)
+      restoreFile(File.join(ENV['HOME'].to_s, ".todo" , "config"))
+      restoreFile(File.join(ENV['HOME'].to_s, "todo.cfg"))
    end
 
+   def off_test_del_wrong_parameter
+      # wrong parameter shall be filtered out by upper layer
+      createTodoFile(@tmpdir, @todoFileName, [
+                 'fadfa',
+                 'fadfa',
+                 'fadfa',
+      ])
+
+       rtodo = Rtodo.new({:dotfile => @dotFname})
+
+       assert_equal(false, rtodo.del('B'))
+   end
+
+   def test_nonexisting_item
+      createTodoFile(@tmpdir, @todoFileName, [
+                 'fadfa',
+                 'fadfa',
+                 'fadfa',
+      ])
+
+       rtodo = Rtodo.new({:dotfile => @dotFname})
+
+       assert_equal(false, rtodo.del(42))
+   end
+
+   def test_normal_delete
+      createTodoFile(@tmpdir, @todoFileName, [
+                     '(B) smell the uppercase Roses +flowers @outside',
+                     '(A) notice the sunflowers',
+                     'stop',
+      ])
+
+      rtodo = Rtodo.new({:dotfile => @dotFname})
+
+      tasks = [
+         '2 (A) notice the sunflowers',
+         '1 (B) smell the uppercase Roses +flowers @outside',
+         '3 stop',
+      ]
+
+      assert_equal(tasks, rtodo.ls)
+
+      del_tasks = '1 (B) smell the uppercase Roses +flowers @outside'
+
+      assert_equal(del_tasks, rtodo.del(1))
+
+      tasks = [
+         '2 (A) notice the sunflowers',
+         '3 stop',
+      ]
+
+      assert_equal(tasks, rtodo.ls)
+   end
+
+   def test_preserve_lines
+      createTodoFile(@tmpdir, @todoFileName, [
+                     '(B) smell the uppercase Roses +flowers @outside',
+                     '(A) notice the sunflowers',
+                     'stop',
+      ])
+
+      rtodo = Rtodo.new({:dotfile => @dotFname})
+
+      tasks = [
+         '2 (A) notice the sunflowers',
+         '1 (B) smell the uppercase Roses +flowers @outside',
+         '3 stop',
+      ]
+
+      assert_equal(tasks, rtodo.ls)
+
+      del_tasks = '1 (B) smell the uppercase Roses +flowers @outside'
+
+      assert_equal(del_tasks, rtodo.del(1, {:preserve_line_num => true}))
+
+      tasks = [
+         '2 (A) notice the sunflowers',
+         '3 stop',
+      ]
+
+      assert_equal(tasks, rtodo.ls)
+   end
 end
 
 __END__
@@ -22,46 +128,6 @@ __END__
 test_description='basic del functionality
 '
 . ./test-lib.sh
-
-test_todo_session 'del usage' <<EOF
->>> todo.sh del B
-usage: todo.sh del ITEM# [TERM]
-=== 1
-EOF
-
-test_todo_session 'del nonexistant item' <<EOF
->>> todo.sh -f del 42
-TODO: No task 42.
-=== 1
-
->>> todo.sh -f del 42 Roses
-TODO: No task 42.
-=== 1
-EOF
-
-cat > todo.txt <<EOF
-(B) smell the uppercase Roses +flowers @outside
-(A) notice the sunflowers
-stop
-EOF
-test_todo_session 'basic del' <<EOF
->>> todo.sh -p list
-2 (A) notice the sunflowers
-1 (B) smell the uppercase Roses +flowers @outside
-3 stop
---
-TODO: 3 of 3 tasks shown
-
->>> todo.sh -f del 1
-1 (B) smell the uppercase Roses +flowers @outside
-TODO: 1 deleted.
-
->>> todo.sh -p list
-2 (A) notice the sunflowers
-3 stop
---
-TODO: 2 of 2 tasks shown
-EOF
 
 cat > todo.txt <<EOF
 (B) smell the uppercase Roses +flowers @outside
