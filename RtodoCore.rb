@@ -98,10 +98,15 @@ class Rtodo
       to_out = Array.new
 
       #pp @all_tasks
+      opt = Hash.new
 
       args.each do |param|
          if param.kind_of?(Fixnum)
             to_out.push param
+         else
+            if param.kind_of?(Hash)
+               opt = param
+            end
          end
       end
 
@@ -112,7 +117,7 @@ class Rtodo
 
          out.map!{ |el| el[:line].to_s + ' x ' + date + ' ' + el[:text] }
 
-         to_out.each { |el| self.del(el)}
+         to_out.each { |el| self.del(el)} unless opt[:no_archive]
          return out
       else
          return false
