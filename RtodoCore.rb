@@ -112,6 +112,7 @@ class Rtodo
 
          out.map!{ |el| el[:line].to_s + ' x ' + date + ' ' + el[:text] }
 
+         to_out.each { |el| self.del(el)}
          return out
       else
          return false
@@ -134,13 +135,19 @@ class Rtodo
 
       @all_tasks.map!{ |el| 
          if el[:line] == item 
-            out = el[:line].to_s + ' ' + el[:text].to_s unless el[:text].empty?
-            if true == opt[:preserve_line_num]
-               el[:text] = ''
+            if opt[:term].nil? || opt[:term].empty?
+               out = el[:line].to_s + ' ' + el[:text].to_s unless el[:text].empty?
+               if true == opt[:preserve_line_num]
+                  el[:text] = ''
+               else
+                  el = nil
+                  renumber = true
+               end
             else
-               el = nil
-               renumber = true
-               puts 'HERE'
+               el[:text].sub!(Regexp.new(opt[:term].to_s), '')
+               el[:text].squeeze!(' ')
+               el[:text].strip!
+               out = el[:line].to_s + ' ' + el[:text].to_s unless el[:text].empty?
             end
          end
          el
