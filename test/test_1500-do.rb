@@ -111,6 +111,14 @@ export TODO_FILE=\"$TODO_DIR/#{@todoFileName}\"
        ]
 
        assert_equal(output, rtodo.ls)
+
+       output = [
+            '5 x ' + date + ' remove2',
+            '4 x ' + date + ' remove1',
+       ]
+
+       assert_equal(output.sort, rtodo.do(5, 4).sort)
+
    end
 end
 
