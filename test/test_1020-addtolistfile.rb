@@ -32,18 +32,18 @@ export TODO_FILE=\"$TODO_DIR/todo.txt\"
 
 
    def test_addto_not_existing_file
-      skip("Not sure if RtodoCore will support addto directly. This would be higher level task.")
-      assert_raise(IOError) { @rtodo.addto(@tmpFileName, 'notice the daisies')}
+      #skip("Not sure if RtodoCore will support addto directly. This would be higher level task.")
+      #assert_raise(IOError) { @rtodo.addto(@tmpFileName, 'notice the daisies')}
    end
 
 
    def test_addto_existing_file
-      skip("Not sure if RtodoCore will support addto directly. This would be higher level task.")
-      File.open(@tmpFileName, 'w') {|f| }
-      assert_nothing_raised(IOError) {
-         task = 'be a misionare'
-         assert_equal('1 ' + task, @rtodo.addto(@tmpFileName, task))
-      }
+      #skip("Not sure if RtodoCore will support addto directly. This would be higher level task.")
+      #File.open(@tmpFileName, 'w') {|f| }
+      #assert_nothing_raised(IOError) {
+         #task = 'be a misionare'
+         #assert_equal('1 ' + task, @rtodo.addto(@tmpFileName, task))
+      #}
    end
 
    def teardown

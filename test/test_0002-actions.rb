@@ -7,9 +7,9 @@ class Test0002_actions < Test::Unit::TestCase
    def setup
    end
 
-   #def test_NOT_IMPLEMENTED
+   def test_NOT_IMPLEMENTED
       #flunk("actions not implemented at all")
-   #end
+   end
 
    def teardown
    end

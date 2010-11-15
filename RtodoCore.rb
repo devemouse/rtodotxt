@@ -1,5 +1,5 @@
 
-require 'RTask'
+#require 'RTask'
 require 'pp'
 
 class String
@@ -10,12 +10,12 @@ end
 
 class Rtodo
    attr_reader :short_help, :help, :long_help, :oneline_help, :all_tasks, :opts
-   PriorityRegexp = /\([A-Z]\) /
-   PriorityRegexpG = /\G\([A-Z]\) /
-   ProjectRegexp = /(\+[^ ]+) /i
-   ProjectRegexpG = /\G(\+[^ ]+) /i
-   ContextRegexp = /(@[^ ]+) /i
-   ContextRegexpG = /\G(@[^ ]+) /i
+   PriorityRegexp   =   /\([A-Z]\) /
+   PriorityRegexp_G = /\G\([A-Z]\) /
+   ProjectRegexp    =   /(\+[^ ]+) /i
+   ProjectRegexp_G  = /\G(\+[^ ]+) /i
+   ContextRegexp    =   /(@[^ ]+) /i
+   ContextRegexp_G  = /\G(@[^ ]+) /i
 
    def method_missing(method, *arg)
       false
@@ -36,7 +36,7 @@ class Rtodo
       out = Array.new
       filtered_tasks = Array.new
       opt = Hash.new
-      @all_tasks.each_with_index do |el,i| 
+      @all_tasks.each_with_index do |el,i|
          to_return = true
 
          unless args.nil?
@@ -52,7 +52,7 @@ class Rtodo
             end
          end
 
-         if to_return 
+         if to_return
             filtered_tasks.push el
          end
       end
@@ -73,9 +73,9 @@ class Rtodo
       end
 
 
-      format = "%0#{len}d %s" 
+      format = "%0#{len}d %s"
 
-      filtered_tasks.each {|el| 
+      filtered_tasks.each {|el|
          #print 'before '
          #pp el
          el[:text].sub!(PriorityRegexp,'') if opt[:hide_priority]
@@ -88,6 +88,36 @@ class Rtodo
       out
    end
 
+   def do(*args)
+      if args.empty?
+         return false
+      end
+
+      list = @all_tasks
+      out = Array.new
+      to_out = Array.new
+
+      #pp @all_tasks
+
+      args.each do |param|
+         if param.kind_of?(Fixnum)
+            to_out.push param
+         end
+      end
+
+      date = Time.now.strftime('%Y-%m-%d').to_s
+
+      unless to_out.empty?
+         out = @all_tasks.select { |el| to_out.include?(el[:line])}
+
+         out.map!{ |el| el[:line].to_s + ' x ' + date + ' ' + el[:text] }
+
+         return out
+      else
+         return false
+      end
+   end
+
    def lsp(priority = '')
       Array.new
    end
@@ -96,13 +126,54 @@ class Rtodo
       Array.new
    end
 
+   def del(item, opt = {:preserve_line_num => true, :term => ''})
+      return false if item > @all_tasks.length
+
+      out = ''
+      renumber = false
+
+      @all_tasks.map!{ |el| 
+         if el[:line] == item 
+            out = el[:line].to_s + ' ' + el[:text].to_s unless el[:text].empty?
+            if true == opt[:preserve_line_num]
+               el[:text] = ''
+            else
+               el = nil
+               renumber = true
+               puts 'HERE'
+            end
+         end
+         el
+      }
+
+      @all_tasks.compact!
+
+      if renumber
+         @all_tasks = @all_tasks.sort_by { |obj| obj[:line]}
+         i = 1
+         @all_tasks = @all_tasks.map!{|el| 
+            if el[:text].empty?
+               el = nil
+            else
+               el[:line] = i
+               i+=1
+            end
+            el
+         }
+         @all_tasks.compact!
+         @all_tasks = @all_tasks.sort_by { |obj| obj[:text]}
+      end
+
+      out.empty? ? false : out
+   end
+
    def lsc()
       out = Array.new
 
-      @all_tasks.each do |el| 
+      @all_tasks.each do |el|
          if el[:text].match(ContextRegexp)
             out.push($1)
-            while $'.match(ContextRegexpG)
+            while $'.match(ContextRegexp_G)
                out.push($1)
             end
          end
@@ -113,10 +184,10 @@ class Rtodo
    def lsprj()
       out = Array.new
 
-      @all_tasks.each do |el| 
+      @all_tasks.each do |el|
          if el[:text].match(ProjectRegexp)
             out.push($1)
-            while $'.match(ProjectRegexpG)
+            while $'.match(ProjectRegexp_G)
                out.push($1)
             end
          end
@@ -151,11 +222,11 @@ class Rtodo
       retval = nil
          retval = Hash.new
          open(file_name, 'r') { |f|
-            f.each do |line| 
+            f.each do |line|
                if /^ *export *(.*)=[ '\"]*([^\s'\"]*)[\s'\"]*/.match(line) then
                   retval[$1] = $2
                end
-            end 
+            end
          }
       retval
    end
@@ -229,9 +300,9 @@ class Rtodo
   #{self.append              ? ' ' : 'X'} append|app ITEM# \"TEXT TO APPEND\"
   #{self.archive             ? ' ' : 'X'} archive
   #{self.command             ? ' ' : 'X'} command [ACTIONS]
-  #{self.del                 ? ' ' : 'X'} del|rm ITEM# [TERM]
+    del|rm ITEM# [TERM]
   #{self.depri               ? ' ' : 'X'} dp|depri ITEM#[, ITEM#, ITEM#, ...]
-  #{self.do                  ? ' ' : 'X'} do ITEM#[, ITEM#, ITEM#, ...]
+    do ITEM#[, ITEM#, ITEM#, ...]
   #{self.help                ? ' ' : 'X'} help
   #{self.list                ? ' ' : 'X'} list|ls [TERM...]
   #{self.listall             ? ' ' : 'X'} listall|lsa [TERM...]
@@ -279,7 +350,7 @@ class Rtodo
       Runs the remaining arguments using only todo.sh builtins.
       Will not call any .todo.actions.d scripts.
 
-  #{self.del ? ' ' : 'X'} del ITEM# [TERM]
+    del ITEM# [TERM]
     rm ITEM# [TERM]
       Deletes the task on line ITEM# in todo.txt.
       If TERM specified, deletes only TERM from the task.
@@ -289,7 +360,7 @@ class Rtodo
       Deprioritizes (removes the priority) from the task(s)
       on line ITEM# in todo.txt.
 
-  #{self.do ? ' ' : 'X'} do ITEM#[, ITEM#, ITEM#, ...]
+    do ITEM#[, ITEM#, ITEM#, ...]
       Marks task(s) on line ITEM# as done in todo.txt.
 
   #{self.help ? ' ' : 'X'} help
