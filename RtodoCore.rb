@@ -32,7 +32,7 @@ class Rtodo
       return (tsk[:line].to_s + ' ' + tsk[:text].to_s)
    end
 
-   def ls(*args)
+   def list(*args)
       out = Array.new
       filtered_tasks = Array.new
       opt = Hash.new
@@ -79,8 +79,8 @@ class Rtodo
          #print 'before '
          #pp el
          el[:text].sub!(PriorityRegexp,'') if opt[:hide_priority]
-         el[:text].sub!(ProjectRegexp,'') if opt[:hide_project]
-         el[:text].sub!(ContextRegexp,'') if opt[:hide_context]
+         el[:text].sub!(ProjectRegexp ,'') if opt[:hide_project]
+         el[:text].sub!(ContextRegexp ,'') if opt[:hide_context]
          #print 'after '
          #pp el
          out.push(format % [(el[:line]), el[:text]]) unless (el[:text].empty?)
@@ -483,7 +483,7 @@ class Rtodo
         #{self.set('TODOTXT_FINAL_FILTER')          ? ' ' : 'X'} TODOTXT_FINAL_FILTER=\"sed ...\"  customize list after color, P@+ hiding"
    end
 
-   alias_method :list, :ls
+   alias_method :ls, :list
    alias_method :listpri, :lsp
    alias_method :listall, :lsa
    alias_method :listcon, :lsc

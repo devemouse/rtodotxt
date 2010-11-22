@@ -30,7 +30,122 @@ $hiders = {
    :hide_priorities => //
 }
 
+class RtodoCLI
 
+   def initialize(args)
+      $params = {
+         :command => '',
+         :term => '',
+         :hide_context => true,
+         :hide_priority => true,
+         :hide_project => true,
+         :add_time => false,
+         :no_archive => false,
+         :preserve_line_num => true,
+      }
+
+      for i in 0..args.length do
+         el = args[i]
+         if el =~ /^(list|ls)$/ then
+            $params[:command] = 'list'
+            i += 1
+            $params[:term] = args[i].to_s
+         end
+
+         if el =~ /^a[d]*$/ then
+            i+=1
+            $params[:command] = 'add'
+            $params[:parameter] = args[i,args.length].join(' ')
+            break
+         end
+
+         if el =~ /^addm$/ then
+            i+=1
+            $params[:command] = 'addm'
+            $params[:parameter] = args[i,args.length].join(' ')
+            break
+         end
+
+         if el =~ /^(del|rm)$/ then
+            $params[:command] = 'del'
+            i+=1
+            $params[:parameter] = Array.new(2)
+            $params[:parameter][0] = args[i]
+            $params[:parameter][1] = args[i+1,args.length]
+            break
+         end
+
+         if el =~ /^(listproj|lsprj)$/ then
+            $params[:command] = 'listproj'
+            $params[:parameter] = /.*(\+\w+).*/i
+         end
+
+         if el =~ /^(listpri|lsp)$/ then
+            $params[:command] = 'listpri'
+            $params[:parameter] = /.*\([A-Z]\).*/
+         end
+
+         if el =~ /^report$/ then
+            $params[:command] = 'report'
+         end
+
+         if el =~ /^help$/ then
+            $params[:command] = 'longhelp'
+         end
+
+         if el =~ /^(listall|lsa)$/ then
+            $params[:command] = 'listall'
+            i += 1
+            $params[:parameter] = Regexp.new(args[i].to_s, Regexp::IGNORECASE) 
+         end
+
+         if el =~ /^(listcon|lsc)$/ then
+            $params[:command] = 'listcon'
+            $params[:parameter] = /.*(@\w+).*/i
+         end
+
+         if el =~ /^do$/ then
+            $params[:command] = 'do'
+            i+=1
+            $params[:parameter] = args[i,args.length]
+         end
+
+         if ((el =~ /^-h$/) || (el =~ /^--help$/)) then
+            $params[:command] = 'help'
+         end
+
+         if el =~ /-(@+)/ then
+            if $1.length.odd? then
+               $hiders[:hide_context] = true
+            end
+         end
+
+         if el =~ /-d/ then
+            puts 'config file changing'
+            i+=1
+            cfgfilesToCheck.unshift(args[i])
+         end
+
+         if el =~ /-(\++)/ then
+            if $1.length.odd?
+               $hiders[:hide_project] = true
+            end
+         end
+
+         if el =~ /-(P+)/ then
+            if $1.length.odd?
+               $hiders[:hide_priority] = true
+            end
+         end
+         end
+
+         if $params[:command].nil?
+            $params[:command] = 'shorthelp'
+         end
+
+      end
+
+   end
 
 def parse_argv
 
@@ -45,7 +160,7 @@ def parse_argv
       if el =~ /^(list|ls)$/ then
          $params[:operation] = 'list'
          i += 1
-         $params[:parameter] = Regexp.new(ARGV[i].to_s, Regexp::IGNORECASE) 
+         $params[:parameter] = ARGV[i].to_s
       end
 
       if el =~ /^a[d]*$/ then
@@ -112,7 +227,7 @@ def parse_argv
 
       if el =~ /-(@+)/ then
          if $1.length.odd? then
-            $hiders[:hide_contexts] = /@\w+/
+            $hiders[:hide_context] = true
          end
       end
 
@@ -124,13 +239,13 @@ def parse_argv
 
       if el =~ /-(\++)/ then
          if $1.length.odd?
-            $hiders[:hide_projects] = /\+\w+/
+            $hiders[:hide_project] = true
          end
       end
 
       if el =~ /-(P+)/ then
          if $1.length.odd?
-            $hiders[:hide_priorities] = /\([A-Z]\) */
+            $hiders[:hide_priority] = true
          end
       end
    end
@@ -364,17 +479,20 @@ when 'add'
    add $params[:parameter].to_s
    puts'added one task: ' + $params[:parameter].to_s
 when 'list'
-   a = list(get_todofile_name($params[:dotfile]["TODO_DIR"], $params[:dotfile]["TODO_FILE"]))
+   #a = list(get_todofile_name($params[:dotfile]["TODO_DIR"], $params[:dotfile]["TODO_FILE"]))
+   tasks = rtodo.list($params[:parameter], $hiders)
+   puts tasks
    puts '--'
-   puts "TODO: #{a[0]} of #{a[1]} tasks shown"
+   puts "TODO: #{tasks.length} of #{tasks.length} tasks shown"
 when  'listproj'
-   list_prj()
+   #list_prj()
+   puts rtodo.lsp
 when 'listpri'
    a = list(get_todofile_name($params[:dotfile]["TODO_DIR"], $params[:dotfile]["TODO_FILE"]))
    puts '--'
    puts "TODO: #{a[0]} of #{a[1]} tasks shown"
 when 'listcon'
-   list_prj()
+   puts rtodo.lsc
 when 'listall'
    a = list(get_todofile_name($params[:dotfile]["TODO_DIR"], $params[:dotfile]["TODO_FILE"]))
    a = list(get_todofile_name($params[:dotfile]["TODO_DIR"], $params[:dotfile]["DONE_FILE"]), a[0], a[1], {:colors => false})
